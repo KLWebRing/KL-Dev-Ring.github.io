@@ -160,7 +160,7 @@ artifact, and deploys it. In repository settings:
 3. Protect `main` with the `validate` status check.
 4. Require one maintainer approval for member changes.
 
-The site works at `https://kldevring.github.io/ring/` because all asset paths
+The site works at `https://klwebring.github.io/KL-Dev-Ring.github.io/` because all asset paths
 are relative.
 
 ## 11. Local workflow

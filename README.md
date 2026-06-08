@@ -40,7 +40,7 @@ fields.
 
 ```html
 <iframe
-  src="https://kldevring.github.io/ring/widget.html?member=your-handle"
+  src="https://klwebring.github.io/KL-Dev-Ring.github.io/widget.html?member=your-handle"
   title="KL Dev-Ring navigation"
   width="440"
   height="170"
