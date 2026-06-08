@@ -1,60 +1,117 @@
-# KL Dev-Ring
+# ⚡ KL Dev-Ring — Kerala's Builder Network
 
-**Kerala's Builder Network. Ranked by what you ship. Connected by what you build.**
+> **Ranked by what you ship. Connected by what you build. Kerala's open-source digital corridor.**
 
-KL Dev-Ring is an open-source network of developers, founders, researchers,
-students, hackers, creators, and maintainers with personal websites. There are
-no accounts, feeds, likes, or followers. The Git repository is the database,
-pull requests are the signup flow, and GitHub Pages is the infrastructure.
+KL Dev-Ring is a community-driven webring and builder registry connecting developers, researchers, student hackers, founders, and open-source contributors across Kerala. 
 
-## Local development
+No algorithms, no likes, no ads, no trackers. Just pure telemetry. The Git repository is the database, Pull Requests are the signup flow, and GitHub Pages serves the infrastructure.
 
-Requirements: Node.js 20 or newer.
+---
 
+## 🌟 Core Features
+
+* 🚀 **Shipped Projects Showcase**: A visual gallery of the active projects launched by network builders.
+* 🏆 **Dynamic Standings**: Filter builder rankings by **All-Time**, **Monthly**, **Weekly**, or **Daily** activity to see who is shipping right now.
+* 🎓 **District & College Leagues**: Aggregate leagues ranking Kerala's 14 districts and student hubs, highlighting the **Top Builder** of each league.
+* 💬 **In-App Community Chat**: A built-in chat channel staffed by our **Telemetry Bot** that greets new signups, announces project launches, and queries stats.
+* 💼 **Recruiter Clipboard Utility**: A one-click tool inside builder passports that generates formatted contact cards for tech recruiters and sponsors.
+* 🎫 **Weekly Challenges & Badges**: Earn visual badge tags like `AI Builder`, `FOSS Hero`, or `Student` by completing open-source sprints.
+
+---
+
+## 🛰️ How to Join the Ring (Step-by-Step)
+
+Adding your signal to Kerala's builder network is done entirely via Git. Follow these steps:
+
+### 1️⃣ Fork the Repository
+Click the **Fork** button at the top right of this repository to create your own copy.
+
+### 2️⃣ Create Your Profile JSON
+In your fork, navigate to the `members/` directory:
+1. Copy the template `members/_template.json` and name it `members/your-github-username.json`.
+2. Fill in your details. For example:
+   ```json
+   {
+     "handle": "your-github-username",
+     "name": "Your Full Name",
+     "github": "your-github-username",
+     "site": "https://your-personal-website.com",
+     "city": "Kochi",
+     "district": "Ernakulam",
+     "college": "Cochin University of Science and Technology",
+     "country": "India",
+     "tags": ["fullstack", "webdev", "opensource"],
+     "bio": "Building the future of the decentralized web. Open-source maintainer.",
+     "joined": "2026-06-08",
+     "stats": {
+       "contributions": 124,
+       "mergedPRs": 12,
+       "streak": 4,
+       "daily": 15,
+       "monthly": 120
+     },
+     "projects": [
+       {
+         "name": "MyAwesomeProject",
+         "url": "https://github.com/your-username/my-awesome-project",
+         "description": "An open-source library that parses telemetry logs in micro-seconds."
+       }
+     ]
+   }
+   ```
+   > [!IMPORTANT]
+   > Make sure your website uses `https://` and your bio is under **250 characters**. The tags must be lowercase kebab-case.
+
+### 3️⃣ Test Your Changes Locally
+Ensure your file structure and data format passes the validation checks:
 ```bash
-npm run dev
+# Install dependencies (only required for local test tooling)
+npm install
+
+# Run the validation suite and build
+npm run check
 ```
+If everything is green, your profile is ready!
 
-Open `http://localhost:4173`. The project has no runtime or build dependencies.
+### 4️⃣ Submit a Pull Request
+Submit a Pull Request from your fork's `main` branch to this repository. Once approved and merged, the Telemetry Bot will automatically welcome you in the community chat, and your card will go live on the dashboard!
 
-```bash
-npm run validate
-npm test
-npm run build
-```
+---
 
-The production site is emitted to `dist/`.
+## 🎛️ Embedding the Navigation Widget
 
-## Join the ring
-
-1. Fork `KLDevRing/ring`.
-2. Copy `members/_template.json` to `members/your-handle.json`.
-3. Fill in your public builder information.
-4. Run `npm run check`.
-5. Open a pull request using the member template.
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for rules and optional project/activity
-fields.
-
-## Embed the widget
+Showcase that you are part of Kerala's builder network by embedding the dynamic navigation widget on your personal website:
 
 ```html
 <iframe
-  src="https://klwebring.github.io/KL-Dev-Ring.github.io/widget.html?member=your-handle"
-  title="KL Dev-Ring navigation"
+  src="https://klwebring.github.io/KL-Dev-Ring.github.io/widget.html?member=your-github-username"
+  title="KL Dev-Ring Navigation"
   width="440"
   height="170"
   loading="lazy"
-  style="border:0;max-width:100%">
-</iframe>
+  style="border:0; max-width:100%;"
+></iframe>
 ```
 
-## Architecture
+---
 
-Read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for product architecture,
-scoring, graph generation, deployment, governance, launch strategy, and roadmap.
+## 🛠️ Local Development
 
-## License
+Requirements: **Node.js v20+** installed.
 
-Code is available under the MIT License. Member profile data remains owned by
-the respective members and is published under CC BY 4.0.
+```bash
+# Start the local development server
+npm run dev
+```
+Open `http://localhost:4173` (or the configured port) in your browser. The server will hot-serve changes from the `dist/` directory built by scripts.
+
+* `npm run validate` - Check member schema formatting.
+* `npm test` - Run structural test cases.
+* `npm run build` - Compile member registry, compute scores, and build profile pages.
+
+---
+
+## ⚖️ Governance & License
+
+* **Code License**: MIT License. Feel free to fork and adapt the engine for other local network nodes!
+* **Member Data**: Profile data remains owned by the respective builders and is published under Creative Commons Attribution 4.0 International (CC BY 4.0).
