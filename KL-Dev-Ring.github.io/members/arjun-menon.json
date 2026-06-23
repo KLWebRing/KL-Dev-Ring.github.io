@@ -1,0 +1,30 @@
+{
+  "handle": "arjun-menon",
+  "name": "Arjun Menon",
+  "github": "arjunmenondev",
+  "site": "https://arjunmenon.dev",
+  "city": "Kollam",
+  "district": "Kollam",
+  "college": "Amrita Vishwa Vidyapeetham, Amritapuri",
+  "country": "India",
+  "tags": ["opensource", "fullstack", "ai", "webdev"],
+  "bio": "Building AI-powered developer tools, open-source platforms, and interactive web experiences. Passionate about communities, startups, and solving real-world problems through technology.",
+  "joined": "2026-06-07",
+  "projects": [
+    {
+      "name": "CampusConnect",
+      "url": "https://github.com/arjunmenondev/campus-connect",
+      "description": "A student collaboration platform for project discovery and team formation."
+    },
+    {
+      "name": "CodeLens AI",
+      "url": "https://github.com/arjunmenondev/codelens-ai",
+      "description": "An AI-powered GitHub repository analysis and documentation assistant."
+    },
+    {
+      "name": "DevSphere",
+      "url": "https://github.com/arjunmenondev/devsphere",
+      "description": "A virtual developer community platform inspired by multiplayer social worlds."
+    }
+  ]
+}
