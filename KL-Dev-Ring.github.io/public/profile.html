@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="{{BIO}}">
+  <title>{{NAME}} — KL Dev-Ring</title>
+  <link rel="stylesheet" href="../../styles.css">
+</head>
+<body>
+  <div class="grain"></div>
+  <header class="topbar">
+    <a class="brand" href="../../"><span><b>KL</b> DEV-RING</span></a>
+    <span class="eyebrow">BUILDER / {{HANDLE}}</span>
+    <a class="join-button" href="../../"><span>Back to universe</span><i>←</i></a>
+  </header>
+  <main id="standaloneProfile" style="min-height:calc(100vh - 185px);display:grid;place-items:center;padding:40px 20px"></main>
+  <footer><div class="brand"><span><b>KL</b> DEV-RING</span></div><p>Ranked by what you ship. Connected by what you build.</p><div><a href="../../">Universe</a></div></footer>
+  <script type="module">
+    import { fetchGitHubProfile } from "../../github.js";
+    import { buildProfileHTML } from "../../utils.js";
+
+    const handle = "{{HANDLE}}";
+    try {
+      const data = await fetch("../../data/network.json").then(r => r.json());
+      const node = data.nodes.find(item => item.handle === handle);
+      if (node) {
+        // Fetch dynamic profile
+        const githubData = await fetchGitHubProfile(node.github, node);
+        githubData.hue = node.hue;
+
+        document.querySelector("#standaloneProfile").innerHTML = `
+          <div class="profile-modal" style="display:block;position:relative;width:min(840px,100%);max-height:none">
+            ${buildProfileHTML(githubData)}
+          </div>`;
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  </script>
+</body>
+</html>
