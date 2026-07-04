@@ -78,8 +78,9 @@ const FENCE_GAP_H = 1.5;
 
 /** Sky / fog colours */
 const SKY_COLOR = 0x8ecde6;
-const FOG_NEAR = 55;
-const FOG_FAR = 110;
+const FOG_DENSITY = 0.014;  // FogExp2 density
+const FOG_NEAR = 55;        // kept for reference
+const FOG_FAR  = 110;
 
 /** Palette */
 const HOUSE_COLORS = [0xf7c59f, 0xa8d8ea, 0xffd166, 0xc7f2a4, 0xe8d5b7, 0xf4a0a0, 0xb5ead7, 0xffd6a5];
@@ -166,18 +167,20 @@ const W = {
 function initScene(canvas) {
   W.scene = new THREE.Scene();
   W.scene.background = new THREE.Color(SKY_COLOR);
-  W.scene.fog = new THREE.Fog(SKY_COLOR, FOG_NEAR, FOG_FAR);
+  // FogExp2 — more natural atmospheric depth falloff than linear fog
+  W.scene.fog = new THREE.FogExp2(SKY_COLOR, FOG_DENSITY);
 
   W.renderer = new THREE.WebGLRenderer({
     canvas,
-    antialias: false,
+    antialias: true,               // MSAA on for cleaner outlines
     powerPreference: "high-performance",
   });
   W.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
   W.renderer.setSize(canvas.clientWidth, canvas.clientHeight);
   W.renderer.outputColorSpace = THREE.SRGBColorSpace;
   W.renderer.shadowMap.enabled = true;
-  W.renderer.shadowMap.type = THREE.BasicShadowMap;
+  // PCFSoftShadowMap — soft Ghibli-style shadow penumbra
+  W.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
   W.camera = new THREE.PerspectiveCamera(
     68, canvas.clientWidth / canvas.clientHeight, 0.1, 200
@@ -198,22 +201,32 @@ function initScene(canvas) {
 // ─────────────────────────────────────────────────────────
 
 function initLighting() {
-  W.scene.add(new THREE.AmbientLight(0xfff4e0, 0.9));
+  // HemisphereLight: warm golden sky above, cool grass bounce from below.
+  // Gives MeshToonMaterial the ambient depth that flat AmbientLight lacks.
+  const hemi = new THREE.HemisphereLight(
+    0xffe8b0,  // sky — golden afternoon
+    0x6aaa50,  // ground — reflected grass
+    0.85
+  );
+  W.scene.add(hemi);
 
-  const sun = new THREE.DirectionalLight(0xffdd99, 2.2);
-  sun.position.set(-14, 22, 8);
+  // Sun — steep afternoon angle, 2048 shadow map for crispness
+  const sun = new THREE.DirectionalLight(0xffdd88, 2.4);
+  sun.position.set(-18, 28, 10);
   sun.castShadow = true;
-  sun.shadow.mapSize.set(1024, 1024);
+  sun.shadow.mapSize.set(2048, 2048);
   sun.shadow.camera.near = 0.5;
-  sun.shadow.camera.far = 200;
-  sun.shadow.camera.left = -120;
-  sun.shadow.camera.right = 120;
-  sun.shadow.camera.top = 120;
-  sun.shadow.camera.bottom = -120;
+  sun.shadow.camera.far = 220;
+  sun.shadow.camera.left   = -130;
+  sun.shadow.camera.right  =  130;
+  sun.shadow.camera.top    =  130;
+  sun.shadow.camera.bottom = -130;
+  sun.shadow.bias = -0.0003;  // prevent shadow acne
   W.scene.add(sun);
 
-  const fill = new THREE.DirectionalLight(0xb2d8ff, 0.5);
-  fill.position.set(14, 10, -12);
+  // Cool blue rim fill from opposite side
+  const fill = new THREE.DirectionalLight(0x9ec4ff, 0.45);
+  fill.position.set(16, 10, -14);
   W.scene.add(fill);
 }
 
@@ -222,9 +235,26 @@ function initLighting() {
 // ─────────────────────────────────────────────────────────
 
 function buildGround() {
+  // Procedural vertex-colour checker — breaks up the flat green polygon.
+  const GRASS_SEGS = 40;
+  const grassGeo = new THREE.PlaneGeometry(400, 400, GRASS_SEGS, GRASS_SEGS);
+  const colA = new THREE.Color(GRASS_COLOR);
+  const colB = new THREE.Color(GRASS_COLOR).lerp(new THREE.Color(0x5ab33a), 0.18);
+  const vCount = grassGeo.attributes.position.count;
+  const colors = new Float32Array(vCount * 3);
+  for (let vi = 0; vi < vCount; vi++) {
+    const col = vi % (GRASS_SEGS + 1);
+    const row = Math.floor(vi / (GRASS_SEGS + 1));
+    const c = (col + row) % 2 === 0 ? colA : colB;
+    colors[vi * 3]     = c.r;
+    colors[vi * 3 + 1] = c.g;
+    colors[vi * 3 + 2] = c.b;
+  }
+  grassGeo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+
   const grass = new THREE.Mesh(
-    new THREE.PlaneGeometry(400, 400),
-    new THREE.MeshToonMaterial({ color: GRASS_COLOR })
+    grassGeo,
+    new THREE.MeshToonMaterial({ color: GRASS_COLOR, vertexColors: true })
   );
   grass.rotation.x = -Math.PI / 2;
   grass.receiveShadow = true;
@@ -598,6 +628,7 @@ function buildNPC(index) {
   body.position.y = 1.05;
   body.castShadow = true;
   npc.add(body, makeOutline(bodyGeo, 1.08));
+  npc.userData.body = body;  // for breathe animation
 
   const armGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.6, 5);
   const armMat = new THREE.MeshToonMaterial({ color: shirt });
@@ -641,12 +672,14 @@ function buildPlayer() {
   head.position.y = 1.72;
   head.castShadow = true;
   player.add(head, makeOutline(headGeo, 1.1));
+  player.userData.head = head;  // for bob animation
 
   const bodyGeo = new THREE.CylinderGeometry(0.26, 0.3, 0.9, 6);
   const body = new THREE.Mesh(bodyGeo, new THREE.MeshToonMaterial({ color: 0x4a90d9 }));
   body.position.y = 1.1;
   body.castShadow = true;
   player.add(body, makeOutline(bodyGeo, 1.08));
+  player.userData.body = body;  // for tilt animation
 
   const legGeo = new THREE.CylinderGeometry(0.11, 0.1, 0.72, 5);
   const legMat = new THREE.MeshToonMaterial({ color: 0x2c3e50 });
@@ -987,9 +1020,29 @@ function updateCharacter(delta) {
     const swing = Math.sin(elapsed * 10) * 0.32;
     W.playerLegs[0].rotation.x = swing;
     W.playerLegs[1].rotation.x = -swing;
+
+    // ── Cosmetic body bob + tilt (mesh-only, never touches W.playerPos) ──
+    const bobY  = Math.abs(Math.sin(elapsed * 10)) * 0.06;
+    const tiltZ = Math.sin(elapsed * 10) * 0.032;
+    if (W.player.userData.body) {
+      W.player.userData.body.position.y = 1.1 + bobY;
+      W.player.userData.body.rotation.z = tiltZ;
+    }
+    if (W.player.userData.head) {
+      W.player.userData.head.position.y = 1.72 + bobY;
+    }
   } else {
     W.playerLegs[0].rotation.x *= 0.8;
     W.playerLegs[1].rotation.x *= 0.8;
+
+    // Spring body back to neutral idle
+    if (W.player.userData.body) {
+      W.player.userData.body.position.y += (1.1  - W.player.userData.body.position.y) * 0.12;
+      W.player.userData.body.rotation.z *= 0.85;
+    }
+    if (W.player.userData.head) {
+      W.player.userData.head.position.y += (1.72 - W.player.userData.head.position.y) * 0.12;
+    }
   }
 
   // ── 3. Apply position and rotation to mesh ───────────────
@@ -1121,9 +1174,9 @@ function exitInterior() {
   W.playerPos.copy(W.savedExteriorPos || new THREE.Vector3(0, 0, 5));
   W.player.position.set(W.playerPos.x, 0, W.playerPos.z);
 
-  // Restore sky / fog  ← BUG FIX
+  // Restore sky / FogExp2 (matches initScene)
   W.scene.background = new THREE.Color(SKY_COLOR);
-  W.scene.fog = new THREE.Fog(SKY_COLOR, FOG_NEAR, FOG_FAR);
+  W.scene.fog = new THREE.FogExp2(SKY_COLOR, FOG_DENSITY);
 
   W.villageGroup.visible = true;
   W.interiorGroup.visible = false;
@@ -1295,8 +1348,19 @@ function animate() {
   // NPC idle (exterior only)
   if (W.mode === "exterior") {
     W.plots.forEach((plot, i) => {
+      // Head gentle bob
       const head = plot.npc.userData.head;
       if (head) head.position.y = 1.62 + Math.sin(elapsed * 1.8 + i) * 0.04;
+
+      // Body breathe: subtle Y-scale pulse (inhale / exhale)
+      const body = plot.npc.userData.body;
+      if (body) {
+        const breathe = 1.0 + Math.sin(elapsed * 1.1 + i * 0.9) * 0.025;
+        body.scale.y = breathe;
+        body.position.y = 1.05 * breathe;  // keep feet grounded
+      }
+
+      // Gentle look-around
       plot.npc.rotation.y = plot.houseRotY + Math.PI + Math.sin(elapsed * 0.6 + i * 1.3) * 0.15;
     });
   }
