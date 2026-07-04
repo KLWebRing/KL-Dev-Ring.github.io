@@ -885,8 +885,8 @@ function initPointerDrive(canvas) {
     if (!W.pointerDown) return;
     const dx = e.clientX - W.pointerLastX;
     W.pointerLastX = e.clientX;
-    // Steer: accumulate yaw
-    W.targetYaw += dx * MOUSE_STEER;
+    // BUG FIX: invert sign — dragging left (negative dx) increases yaw (turns left).
+    W.targetYaw -= dx * MOUSE_STEER;
   };
   W.boundPtrUp = () => { W.pointerDown = false; };
 
@@ -900,7 +900,8 @@ function initPointerDrive(canvas) {
     if (!W.pointerDown || e.touches.length !== 1) return;
     const dx = e.touches[0].clientX - W.pointerLastX;
     W.pointerLastX = e.touches[0].clientX;
-    W.targetYaw += dx * MOUSE_STEER;
+    // BUG FIX: invert sign — same convention as mouse pointer above.
+    W.targetYaw -= dx * MOUSE_STEER;
   };
   W.boundTouchEnd = () => { W.pointerDown = false; };
 
@@ -1001,15 +1002,38 @@ function updateCharacter(delta) {
 
 /**
  * Computes ideal camera position behind the player and lerps toward it.
+ *
+ * BUG FIX: When inside the 8×8 interior room the standard CAM_BEHIND (9 units)
+ * would push the camera backward through the south wall on every frame,
+ * overwriting the hardcoded interior spawn position.
+ * Solution: use a dynamic follow distance and height that tighten to a tight
+ * over-the-shoulder view while isInside, and restore exterior defaults outside.
  */
 function updateTrailingCamera() {
+  // Dynamic follow parameters based on interior state
+  const isInside = W.mode === "interior";
+  const targetBehind = isInside ? 1.5 : CAM_BEHIND;
+  const targetHeight = isInside ? 1.2 : CAM_HEIGHT;
+
+  // Lerp the effective distance/height toward target (smooth transition on enter/exit)
+  if (updateTrailingCamera._behind === undefined) {
+    updateTrailingCamera._behind = CAM_BEHIND;
+    updateTrailingCamera._height = CAM_HEIGHT;
+  }
+  const distLerp = isInside ? 0.12 : 0.06; // snap in quickly, ease back out
+  updateTrailingCamera._behind += (targetBehind - updateTrailingCamera._behind) * distLerp;
+  updateTrailingCamera._height += (targetHeight - updateTrailingCamera._height) * distLerp;
+
+  const effectiveBehind = updateTrailingCamera._behind;
+  const effectiveHeight = updateTrailingCamera._height;
+
   // Ideal position: behind the player in the direction they face
   // "behind" = opposite of forward = -sin/cos(yaw)
-  const behindX = -Math.sin(W.playerYaw) * CAM_BEHIND;
-  const behindZ = -Math.cos(W.playerYaw) * CAM_BEHIND;
+  const behindX = -Math.sin(W.playerYaw) * effectiveBehind;
+  const behindZ = -Math.cos(W.playerYaw) * effectiveBehind;
 
   const idealX = W.playerPos.x + behindX;
-  const idealY = W.playerPos.y + CAM_HEIGHT;
+  const idealY = W.playerPos.y + effectiveHeight;
   const idealZ = W.playerPos.z + behindZ;
 
   // Lerp current cam pos toward ideal
