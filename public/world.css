@@ -1,0 +1,589 @@
+/* ============================================================
+   KL Dev-Ring — World Mode CSS
+   All styles specific to the 3D village experience.
+   ============================================================ */
+
+/* ── Floating Action Button ─────────────────────────────── */
+#worldFab {
+  position: fixed;
+  bottom: 32px;
+  right: 32px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 22px;
+  background: rgba(7, 10, 9, 0.82);
+  border: 1px solid rgba(255, 179, 26, 0.35);
+  border-radius: 100px;
+  color: #e8eadf;
+  font: 500 12px/1 "DM Mono", monospace;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow:
+    0 0 0 1px rgba(255, 179, 26, 0.08),
+    0 8px 32px rgba(0, 0, 0, 0.55),
+    0 0 40px rgba(255, 179, 26, 0.06);
+  transition: border-color 0.25s, box-shadow 0.25s, transform 0.2s;
+  animation: fab-pulse 3s ease-in-out infinite;
+}
+
+#worldFab:hover {
+  border-color: rgba(255, 179, 26, 0.7);
+  box-shadow:
+    0 0 0 1px rgba(255, 179, 26, 0.18),
+    0 12px 40px rgba(0, 0, 0, 0.65),
+    0 0 60px rgba(255, 179, 26, 0.18);
+  transform: translateY(-2px);
+}
+
+#worldFab:active {
+  transform: translateY(0px) scale(0.97);
+}
+
+.world-fab-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, #ffb31a 0%, #7ad8a6 50%, #ffb31a 100%);
+  animation: fab-spin 8s linear infinite;
+  flex-shrink: 0;
+}
+
+.world-fab-label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.world-fab-label span:first-child {
+  color: #ffb31a;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+}
+
+.world-fab-label span:last-child {
+  font-size: 11px;
+}
+
+@keyframes fab-pulse {
+  0%, 100% { box-shadow: 0 0 0 1px rgba(255,179,26,0.08), 0 8px 32px rgba(0,0,0,0.55), 0 0 40px rgba(255,179,26,0.06); }
+  50%       { box-shadow: 0 0 0 1px rgba(255,179,26,0.2), 0 8px 32px rgba(0,0,0,0.55), 0 0 70px rgba(255,179,26,0.16); }
+}
+
+@keyframes fab-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+
+/* ── World Overlay Container ────────────────────────────── */
+#worldOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: #000;
+  display: flex;
+  flex-direction: column;
+  transition: opacity 0.4s;
+}
+
+#worldOverlay.hidden {
+  display: none;
+}
+
+#worldOverlay.world-fading-in {
+  animation: world-fade-in 0.6s ease forwards;
+}
+
+@keyframes world-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+#worldCanvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  outline: none;
+}
+
+
+/* ── Exit Button ────────────────────────────────────────── */
+#exitWorld {
+  position: absolute;
+  top: 20px;
+  left: 24px;
+  z-index: 210;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: rgba(7, 10, 9, 0.75);
+  border: 1px solid rgba(223, 232, 211, 0.15);
+  border-radius: 100px;
+  color: #e8eadf;
+  font: 500 10px/1 "DM Mono", monospace;
+  letter-spacing: 0.14em;
+  cursor: pointer;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: border-color 0.2s, background 0.2s;
+}
+
+#exitWorld:hover {
+  background: rgba(30, 36, 32, 0.9);
+  border-color: rgba(255, 179, 26, 0.5);
+}
+
+#exitWorld svg {
+  width: 12px;
+  height: 12px;
+  stroke: #ffb31a;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+/* World title in topbar area */
+.world-topbar {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 210;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font: 500 10px/1 "DM Mono", monospace;
+  letter-spacing: 0.2em;
+  color: rgba(232, 234, 223, 0.5);
+  pointer-events: none;
+}
+
+.world-topbar .live-dot {
+  width: 6px;
+  height: 6px;
+  background: #7ad8a6;
+  border-radius: 50%;
+  display: inline-block;
+  animation: dot-blink 1.8s ease-in-out infinite;
+}
+
+@keyframes dot-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.2; }
+}
+
+
+/* ── WASD Hint ──────────────────────────────────────────── */
+.world-hud-hint {
+  position: absolute;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 210;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 20px;
+  background: rgba(7, 10, 9, 0.65);
+  border: 1px solid rgba(223, 232, 211, 0.1);
+  border-radius: 100px;
+  font: 400 9px/1 "DM Mono", monospace;
+  letter-spacing: 0.18em;
+  color: rgba(232, 234, 223, 0.45);
+  backdrop-filter: blur(12px);
+  pointer-events: none;
+  animation: hint-fadeout 1s ease 5s forwards;
+}
+
+.world-hud-hint kbd {
+  padding: 3px 7px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+  font: inherit;
+  color: #e8eadf;
+  letter-spacing: 0;
+}
+
+@keyframes hint-fadeout {
+  from { opacity: 1; }
+  to   { opacity: 0; pointer-events: none; }
+}
+
+
+/* ── NPC Nametag ────────────────────────────────────────── */
+#worldNametag {
+  position: absolute;
+  z-index: 215;
+  pointer-events: none;
+  transform: translate(-50%, -100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  opacity: 0;
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+#worldNametag.visible {
+  opacity: 1;
+  transform: translate(-50%, calc(-100% - 8px));
+}
+
+.nametag-bubble {
+  background: rgba(7, 10, 9, 0.88);
+  border: 1px solid rgba(255, 179, 26, 0.45);
+  border-radius: 10px;
+  padding: 8px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.6), 0 0 20px rgba(255,179,26,0.1);
+  white-space: nowrap;
+}
+
+.nametag-name {
+  font: 600 12px "Manrope", sans-serif;
+  color: #e8eadf;
+  letter-spacing: 0.02em;
+}
+
+.nametag-handle {
+  font: 400 9px "DM Mono", monospace;
+  color: #ffb31a;
+  letter-spacing: 0.12em;
+}
+
+.nametag-arrow {
+  width: 0;
+  height: 0;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-top: 7px solid rgba(255, 179, 26, 0.45);
+  margin-top: -1px;
+}
+
+
+/* ── Interior Stats Panel ───────────────────────────────── */
+#interiorPanel {
+  position: absolute;
+  top: 50%;
+  right: 24px;
+  z-index: 215;
+  transform: translateY(-50%) translateX(calc(100% + 24px));
+  width: 280px;
+  background: rgba(7, 10, 9, 0.92);
+  border: 1px solid rgba(223, 232, 211, 0.12);
+  border-radius: 16px;
+  padding: 24px;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.7), 0 0 1px rgba(255,179,26,0.1);
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  pointer-events: none;
+  overflow-y: auto;
+  max-height: calc(100vh - 120px);
+}
+
+#interiorPanel.visible {
+  transform: translateY(-50%) translateX(0);
+  pointer-events: auto;
+}
+
+.interior-eyebrow {
+  font: 500 9px "DM Mono", monospace;
+  letter-spacing: 0.2em;
+  color: #ffb31a;
+  margin-bottom: 12px;
+}
+
+.interior-name {
+  font: 700 18px "Manrope", sans-serif;
+  color: #e8eadf;
+  margin: 0 0 2px 0;
+  line-height: 1.2;
+}
+
+.interior-handle {
+  font: 400 10px "DM Mono", monospace;
+  color: rgba(232, 234, 223, 0.45);
+  letter-spacing: 0.1em;
+  margin-bottom: 20px;
+  display: block;
+}
+
+.interior-divider {
+  height: 1px;
+  background: rgba(223, 232, 211, 0.1);
+  margin: 16px 0;
+}
+
+.interior-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.interior-stat {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(223, 232, 211, 0.08);
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.interior-stat-val {
+  font: 700 22px "DM Mono", monospace;
+  color: #7ad8a6;
+  line-height: 1;
+}
+
+.interior-stat-val.streak { color: #ffb31a; }
+.interior-stat-val.prs { color: #4fc3f7; }
+
+.interior-stat-label {
+  font: 400 8px "DM Mono", monospace;
+  letter-spacing: 0.16em;
+  color: rgba(232, 234, 223, 0.4);
+  text-transform: uppercase;
+}
+
+.interior-projects-header {
+  font: 500 9px "DM Mono", monospace;
+  letter-spacing: 0.18em;
+  color: rgba(232, 234, 223, 0.5);
+  margin-bottom: 10px;
+}
+
+.interior-project-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(223, 232, 211, 0.07);
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+
+.interior-project-item:last-child {
+  border-bottom: none;
+}
+
+.interior-project-item:hover .interior-project-name {
+  color: #ffb31a;
+}
+
+.interior-project-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #7ad8a6;
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+
+.interior-project-name {
+  font: 600 11px "Manrope", sans-serif;
+  color: #e8eadf;
+  display: block;
+  transition: color 0.15s;
+}
+
+.interior-project-desc {
+  font: 400 9px "Manrope", sans-serif;
+  color: rgba(232, 234, 223, 0.4);
+  display: block;
+  line-height: 1.5;
+  margin-top: 2px;
+}
+
+.interior-bio {
+  font: 400 11px/1.6 "Manrope", sans-serif;
+  color: rgba(232, 234, 223, 0.6);
+  margin-bottom: 4px;
+}
+
+.interior-hint {
+  margin-top: 16px;
+  padding: 10px 14px;
+  background: rgba(255, 179, 26, 0.07);
+  border: 1px solid rgba(255, 179, 26, 0.2);
+  border-radius: 8px;
+  font: 400 9px "DM Mono", monospace;
+  letter-spacing: 0.12em;
+  color: rgba(255, 179, 26, 0.7);
+  text-align: center;
+}
+
+/* Scrollbar styling for interior panel */
+#interiorPanel::-webkit-scrollbar { width: 3px; }
+#interiorPanel::-webkit-scrollbar-track { background: transparent; }
+#interiorPanel::-webkit-scrollbar-thumb { background: rgba(255,179,26,0.3); border-radius: 2px; }
+
+
+/* ── World Loading Screen ────────────────────────────────── */
+#worldLoader {
+  position: absolute;
+  inset: 0;
+  z-index: 220;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #070a09;
+  gap: 20px;
+  transition: opacity 0.5s;
+}
+
+#worldLoader.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.world-loader-ring {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 179, 26, 0.2);
+  border-top-color: #ffb31a;
+  animation: loader-spin 1s linear infinite;
+}
+
+@keyframes loader-spin {
+  to { transform: rotate(360deg); }
+}
+
+.world-loader-text {
+  font: 500 9px "DM Mono", monospace;
+  letter-spacing: 0.22em;
+  color: rgba(232, 234, 223, 0.45);
+  text-transform: uppercase;
+}
+
+
+/* ── Desk [E] Interaction Prompt ─────────────────────────── */
+#deskPrompt {
+  position: absolute;
+  bottom: 80px;
+  left: 50%;
+  z-index: 215;
+  transform: translateX(-50%) translateY(16px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s, transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+#deskPrompt.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.desk-prompt-inner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 22px;
+  background: rgba(7, 10, 9, 0.90);
+  border: 1px solid rgba(255, 179, 26, 0.5);
+  border-radius: 14px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow:
+    0 8px 32px rgba(0,0,0,0.6),
+    0 0 40px rgba(255,179,26,0.12);
+  white-space: nowrap;
+  animation: desk-prompt-pulse 2s ease-in-out infinite;
+}
+
+@keyframes desk-prompt-pulse {
+  0%, 100% { box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 40px rgba(255,179,26,0.12); }
+  50%       { box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 60px rgba(255,179,26,0.28); }
+}
+
+.desk-prompt-key {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  background: rgba(255, 179, 26, 0.15);
+  border: 2px solid rgba(255, 179, 26, 0.7);
+  border-radius: 8px;
+  font: 700 16px "DM Mono", monospace;
+  color: #ffb31a;
+  flex-shrink: 0;
+  box-shadow: 0 0 16px rgba(255,179,26,0.25), inset 0 1px 0 rgba(255,255,255,0.1);
+  animation: key-bounce 1.6s ease-in-out infinite;
+}
+
+@keyframes key-bounce {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-3px); }
+}
+
+.desk-prompt-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.desk-prompt-action {
+  font: 600 11px "Manrope", sans-serif;
+  letter-spacing: 0.08em;
+  color: #e8eadf;
+}
+
+.desk-prompt-name {
+  font: 400 9px "DM Mono", monospace;
+  letter-spacing: 0.14em;
+  color: #ffb31a;
+}
+
+
+/* ── [ENTER] Door Prompt ─────────────────────────────────── */
+/* Reuses all .desk-prompt-* classes — only needs its own position */
+#enterPrompt {
+  position: absolute;
+  bottom: 80px;
+  left: 50%;
+  z-index: 215;
+  transform: translateX(-50%) translateY(16px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s, transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+#enterPrompt.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* When desk prompt is also visible, bump enter prompt up */
+#deskPrompt.visible ~ #enterPrompt.visible,
+#enterPrompt.visible + #deskPrompt.visible {
+  bottom: 140px;
+}
+
+.enter-prompt-action {
+  font: 600 11px "Manrope", sans-serif;
+  letter-spacing: 0.08em;
+  color: #e8eadf;
+}
+
+.enter-prompt-name {
+  font: 400 9px "DM Mono", monospace;
+  letter-spacing: 0.14em;
+  color: #7ad8a6;
+}
+
