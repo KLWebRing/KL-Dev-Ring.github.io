@@ -7,6 +7,16 @@
   <meta name="description" content="KL Dev-Ring is Kerala's open-source builder network. Ranked by what you ship. Connected by what you build.">
   <title>KL Dev-Ring — Kerala's Builder Network</title>
   <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./world.css">
+
+  <!-- Three.js r165 via importmap — no bundler required -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://esm.sh/three@0.165.0"
+    }
+  }
+  </script>
 </head>
 <body>
   <div class="grain" aria-hidden="true"></div>
@@ -145,6 +155,127 @@
     <div id="profileContent"></div>
   </dialog>
 
+  <!-- ═══════════════════════════════════════════════════
+       WORLD MODE — Floating Action Button
+  ════════════════════════════════════════════════════ -->
+  <button id="worldFab" aria-label="Enter 3D World Mode">
+    <div class="world-fab-icon" aria-hidden="true"></div>
+    <div class="world-fab-label">
+      <span>3D WORLD</span>
+      <span>Live in the Ring</span>
+    </div>
+  </button>
+
+  <!-- ═══════════════════════════════════════════════════
+       WORLD MODE — Full-screen Overlay
+  ════════════════════════════════════════════════════ -->
+  <div id="worldOverlay" class="hidden" role="dialog" aria-label="KL Dev-Ring 3D World" aria-modal="true">
+
+    <!-- Canvas -->
+    <canvas id="worldCanvas"></canvas>
+
+    <!-- Loading screen -->
+    <div id="worldLoader" aria-label="Loading world">
+      <div class="world-loader-ring"></div>
+      <div class="world-loader-text">SPAWNING VILLAGE...</div>
+    </div>
+
+    <!-- Top-left exit button -->
+    <button id="exitWorld" aria-label="Exit 3D world">
+      <svg viewBox="0 0 12 12" aria-hidden="true">
+        <path d="M11 1L1 11M1 1l10 10"/>
+      </svg>
+      EXIT WORLD
+    </button>
+
+    <!-- World title -->
+    <div class="world-topbar" aria-hidden="true">
+      <span class="live-dot"></span>
+      KL DEV-RING / WORLD MODE
+    </div>
+
+    <!-- WASD hint -->
+    <div class="world-hud-hint" aria-hidden="true">
+      <kbd>W</kbd><span>run</span>
+      <span>·</span>
+      <kbd>A</kbd><kbd>D</kbd><span>steer</span>
+      <span>·</span>
+      <kbd>hold click</kbd><span>run</span>
+      <span>·</span>
+      <kbd>↵</kbd><span>enter/exit</span>
+      <span>·</span>
+      <kbd>E</kbd><span>interact</span>
+    </div>
+
+    <!-- NPC Nametag (positioned by JS) -->
+    <div id="worldNametag" role="tooltip" aria-live="polite">
+      <div class="nametag-bubble">
+        <span class="nametag-name"></span>
+        <span class="nametag-handle"></span>
+      </div>
+      <div class="nametag-arrow" aria-hidden="true"></div>
+    </div>
+
+    <!-- Interior builder stats panel -->
+    <aside id="interiorPanel" aria-label="Builder profile" aria-live="polite"></aside>
+
+    <!-- [ENTER] door prompt (enter/exit house) -->
+    <div id="enterPrompt" role="status" aria-live="polite">
+      <div class="desk-prompt-inner">
+        <span class="desk-prompt-key" style="font-size:9px;width:44px;">↵</span>
+        <div class="desk-prompt-text">
+          <span class="enter-prompt-action">ENTER HOUSE</span>
+          <span class="enter-prompt-name"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- [E] desk interaction prompt -->
+    <div id="deskPrompt" role="status" aria-live="polite">
+      <div class="desk-prompt-inner">
+        <span class="desk-prompt-key">E</span>
+        <div class="desk-prompt-text">
+          <span class="desk-prompt-action">OPEN PERSONAL SITE</span>
+          <span class="desk-prompt-name"></span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Main app -->
   <script type="module" src="./app.js"></script>
+
+  <!-- World mode wiring -->
+  <script type="module">
+    import { initWorld, destroyWorld } from './world.js';
+
+    const fab     = document.getElementById('worldFab');
+    const overlay = document.getElementById('worldOverlay');
+    const canvas  = document.getElementById('worldCanvas');
+    const exitBtn = document.getElementById('exitWorld');
+
+    fab.addEventListener('click', () => {
+      overlay.classList.remove('hidden');
+      overlay.classList.add('world-fading-in');
+      // Slight delay so CSS transition plays
+      setTimeout(() => initWorld(canvas), 50);
+    });
+
+    exitBtn.addEventListener('click', () => {
+      destroyWorld();
+      overlay.classList.add('hidden');
+      overlay.classList.remove('world-fading-in');
+    });
+
+    // Also exit on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !overlay.classList.contains('hidden')) {
+        destroyWorld();
+        overlay.classList.add('hidden');
+        overlay.classList.remove('world-fading-in');
+      }
+    });
+  </script>
 </body>
 </html>
