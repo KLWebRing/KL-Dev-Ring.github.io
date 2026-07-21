@@ -707,6 +707,6 @@ function seeded(value, salt = 0) {
 }
 
 function pickColor(val, list) {
-  const idx = Math.floor(val * list.length);
+  const idx = Math.floor((val % 1) * list.length);
   return list[idx];
 }

@@ -5,7 +5,7 @@
  */
 
 import { createCharacter, animateCharacter, createToonMesh } from "./character.js";
-import { createHouse, createInterior, animateInterior, getBuilderInterest, createCoconutTree } from "./house.js";
+import { createHouse, createInterior, animateInterior, getBuilderInterest } from "./house.js";
 
 function createSkyGradientTexture(THREE) {
   const canvas = document.createElement("canvas");
@@ -823,6 +823,39 @@ export function initWorld(THREE, container, members, onInteract) {
     }
   }
   createStreetlights();
+
+  function createCoconutTree(THREE) {
+    const tree = new THREE.Group();
+    const matWood = new THREE.MeshToonMaterial({ color: 0x78350f });
+    const trunk = createToonMesh(THREE, new THREE.CylinderGeometry(0.15, 0.25, 2.8, 8), matWood, 0.02);
+    trunk.position.y = 1.4;
+    tree.add(trunk);
+
+    const matLeaves = new THREE.MeshToonMaterial({ color: 0x22c55e });
+    for (let i = 0; i < 5; i++) {
+      const leaf = createToonMesh(THREE, new THREE.BoxGeometry(1.8, 0.1, 0.6), matLeaves, 0.02);
+      leaf.position.y = 2.8;
+      leaf.rotation.y = (Math.PI * 2 / 5) * i;
+      leaf.rotation.z = 0.3;
+      leaf.position.x = Math.cos(leaf.rotation.y) * 0.8;
+      leaf.position.z = -Math.sin(leaf.rotation.y) * 0.8;
+      tree.add(leaf);
+    }
+    
+    // Coconuts
+    const matCoco = new THREE.MeshToonMaterial({ color: 0x451a03 });
+    for(let i = 0; i < 3; i++) {
+        const coco = createToonMesh(THREE, new THREE.SphereGeometry(0.18, 8, 8), matCoco, 0.02);
+        coco.position.set(
+            Math.cos(i * Math.PI * 2 / 3) * 0.3,
+            2.6,
+            Math.sin(i * Math.PI * 2 / 3) * 0.3
+        );
+        tree.add(coco);
+    }
+
+    return tree;
+  }
 
   // Decorative trees around the plaza (replaced with coconut trees)
   function createPlazaDecorations() {
