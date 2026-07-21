@@ -1,0 +1,330 @@
+// ── KL DevVerse — Database Schema ────────────────────────────────────
+// PostgreSQL via Prisma. All Phase 2 tables.
+// Future phases add models without modifying existing ones.
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// Users & Auth
+// ═══════════════════════════════════════════════════════════════════════
+
+model User {
+  id          String   @id @default(cuid())
+  githubId    Int      @unique
+  username    String   @unique
+  displayName String
+  avatarUrl   String
+  profileUrl  String
+  email       String?
+  bio         String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Phase 2 relations
+  sessions         Session[]
+  sentRequests     FriendRequest[] @relation("SentRequests")
+  receivedRequests FriendRequest[] @relation("ReceivedRequests")
+  friendsA         Friendship[]    @relation("FriendA")
+  friendsB         Friendship[]    @relation("FriendB")
+  messages         Message[]
+  presence         Presence?
+  settings         UserSettings?
+  profile          UserProfile?
+
+  // Phase 3 relations
+  house           House?
+  inventory       InventoryItem[]
+  wardrobe        WardrobeItem[]
+  achievements    Achievement[]
+  builderProgress BuilderProgress?
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refreshToken String   @unique
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// Friends
+// ═══════════════════════════════════════════════════════════════════════
+
+model FriendRequest {
+  id         String        @id @default(cuid())
+  senderId   String
+  receiverId String
+  sender     User          @relation("SentRequests", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver   User          @relation("ReceivedRequests", fields: [receiverId], references: [id], onDelete: Cascade)
+  status     RequestStatus @default(PENDING)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  @@unique([senderId, receiverId])
+  @@index([receiverId])
+}
+
+model Friendship {
+  id        String   @id @default(cuid())
+  userAId   String
+  userBId   String
+  userA     User     @relation("FriendA", fields: [userAId], references: [id], onDelete: Cascade)
+  userB     User     @relation("FriendB", fields: [userBId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userAId, userBId])
+  @@index([userBId])
+}
+
+enum RequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// Chat
+// ═══════════════════════════════════════════════════════════════════════
+
+model Message {
+  id        String      @id @default(cuid())
+  authorId  String
+  author    User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  channel   ChatChannel
+  targetId  String?
+  content   String      @db.VarChar(1000)
+  createdAt DateTime    @default(now())
+
+  @@index([channel, createdAt])
+  @@index([authorId])
+  @@index([targetId, createdAt])
+}
+
+enum ChatChannel {
+  GLOBAL
+  NEARBY
+  DISTRICT
+  PRIVATE
+  SYSTEM
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// Presence
+// ═══════════════════════════════════════════════════════════════════════
+
+model Presence {
+  id       String     @id @default(cuid())
+  userId   String     @unique
+  user     User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status   UserStatus @default(ONLINE)
+  district String?
+  posX     Float      @default(0)
+  posZ     Float      @default(0)
+  activity String?
+  lastSeen DateTime   @default(now())
+}
+
+enum UserStatus {
+  ONLINE
+  AWAY
+  BUSY
+  OFFLINE
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// Profile & Settings
+// ═══════════════════════════════════════════════════════════════════════
+
+model UserProfile {
+  id           String  @id @default(cuid())
+  userId       String  @unique
+  user         User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tagline      String? @db.VarChar(140)
+  builderLevel Int     @default(1)
+  xp           Int     @default(0)
+  // Future: inventoryId, wardrobeId, organizationId
+}
+
+model UserSettings {
+  id               String  @id @default(cuid())
+  userId           String  @unique
+  user             User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chatEnabled      Boolean @default(true)
+  friendRequests   Boolean @default(true)
+  showOnlineStatus Boolean @default(true)
+  // Future: audioVolume, graphicsQuality, keybinds
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// Phase 3 — Builder Identity
+// ═══════════════════════════════════════════════════════════════════════
+
+// ── House ────────────────────────────────────────────────────────────
+
+model House {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String   @default("My House")
+  level       Int      @default(1)
+  theme       String   @default("default")
+  floorMat    String   @default("wood")
+  wallColor   String   @default("#2a2a3a")
+  lightPreset String   @default("warm")
+  isPublic    Boolean  @default(true)
+  plotX       Float    @default(0)
+  plotZ       Float    @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  furniture   PlacedFurniture[]
+  decorations PlacedDecoration[]
+  visitors    HouseVisit[]
+  projectWall ProjectDisplay[]
+}
+
+model PlacedFurniture {
+  id       String @id @default(cuid())
+  houseId  String
+  house    House  @relation(fields: [houseId], references: [id], onDelete: Cascade)
+  itemId   String
+  slotId   String
+  posX     Float  @default(0)
+  posZ     Float  @default(0)
+  rotation Float  @default(0)
+  variant  String @default("default")
+
+  @@index([houseId])
+}
+
+model PlacedDecoration {
+  id       String @id @default(cuid())
+  houseId  String
+  house    House  @relation(fields: [houseId], references: [id], onDelete: Cascade)
+  itemId   String
+  wallId   String
+  posX     Float  @default(0)
+  posY     Float  @default(0)
+  rotation Float  @default(0)
+
+  @@index([houseId])
+}
+
+// ── Inventory ────────────────────────────────────────────────────────
+
+model InventoryItem {
+  id         String       @id @default(cuid())
+  userId     String
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  catalogId  String
+  category   ItemCategory
+  quantity   Int          @default(1)
+  acquiredAt DateTime     @default(now())
+  source     String       @default("starter")
+
+  @@unique([userId, catalogId])
+  @@index([userId, category])
+}
+
+enum ItemCategory {
+  FURNITURE
+  COSMETIC
+  DECORATION
+  SPECIAL
+  COLLECTIBLE
+}
+
+// ── Wardrobe ─────────────────────────────────────────────────────────
+
+model WardrobeItem {
+  id         String       @id @default(cuid())
+  userId     String
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  catalogId  String
+  slot       WardrobeSlot
+  equipped   Boolean      @default(false)
+  acquiredAt DateTime     @default(now())
+
+  @@unique([userId, catalogId])
+  @@index([userId, slot])
+}
+
+enum WardrobeSlot {
+  HAIR
+  FACE
+  SHIRT
+  JACKET
+  PANTS
+  SHOES
+  BACKPACK
+  ACCESSORY
+}
+
+// ── Builder Progress ─────────────────────────────────────────────────
+
+model BuilderProgress {
+  id                  String @id @default(cuid())
+  userId              String @unique
+  user                User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  builderPoints       Int    @default(0)
+  level               Int    @default(1)
+  totalXp             Int    @default(0)
+  pointsFromGithub    Int    @default(0)
+  pointsFromSocial    Int    @default(0)
+  pointsFromExploring Int    @default(0)
+  pointsFromBuilding  Int    @default(0)
+}
+
+// ── Achievements ─────────────────────────────────────────────────────
+
+model Achievement {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achieveId  String
+  unlockedAt DateTime @default(now())
+  progress   Int      @default(100)
+
+  @@unique([userId, achieveId])
+  @@index([userId])
+}
+
+// ── House Visits ─────────────────────────────────────────────────────
+
+model HouseVisit {
+  id        String   @id @default(cuid())
+  houseId   String
+  house     House    @relation(fields: [houseId], references: [id], onDelete: Cascade)
+  visitorId String
+  visitedAt DateTime @default(now())
+
+  @@index([houseId, visitedAt])
+  @@index([visitorId])
+}
+
+// ── Project Display ──────────────────────────────────────────────────
+
+model ProjectDisplay {
+  id          String  @id @default(cuid())
+  houseId     String
+  house       House   @relation(fields: [houseId], references: [id], onDelete: Cascade)
+  repoUrl     String
+  repoName    String
+  description String  @default("")
+  slotIndex   Int
+  pinned      Boolean @default(false)
+
+  @@unique([houseId, slotIndex])
+  @@index([houseId])
+}
