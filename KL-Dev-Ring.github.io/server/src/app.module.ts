@@ -13,7 +13,7 @@ import { PresenceModule } from './presence/presence.module';
 import { GameModule } from './game/game.module';
 
 // Phase 3 — Builder Identity
-import { HouseModule } from './house/house.module';
+import { StudioModule } from './studio/studio.module';
 import { InventoryModule } from './inventory/inventory.module';
 import { WardrobeModule } from './wardrobe/wardrobe.module';
 import { BuilderModule } from './builder/builder.module';
@@ -21,10 +21,10 @@ import { AchievementModule } from './achievement/achievement.module';
 
 @Module({
   imports: [
-    // Configuration (loads .env)
+    // Configuration — loads .env (cloud-native, no localhost assumptions)
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: '.env',
+      envFilePath: ['.env'],
     }),
 
     // Infrastructure
@@ -41,7 +41,7 @@ import { AchievementModule } from './achievement/achievement.module';
     GameModule,
 
     // Phase 3 — Builder Identity
-    HouseModule,
+    StudioModule,
     InventoryModule,
     WardrobeModule,
     BuilderModule,

@@ -1,5 +1,6 @@
 // ── KL DevVerse — Server Bootstrap ───────────────────────────────────
 // Entry point for the NestJS server.
+// Cloud-native: no localhost assumptions.
 
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
@@ -9,9 +10,12 @@ import * as cookieParser from 'cookie-parser';
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
 
-  // CORS — allow the Vite dev server
+  const clientUrl = process.env['CLIENT_URL'] ?? 'http://localhost:5173';
+  const nodeEnv = process.env['NODE_ENV'] ?? 'development';
+
+  // CORS — allow the configured client origin
   app.enableCors({
-    origin: process.env['CLIENT_URL'] ?? 'http://localhost:5173',
+    origin: clientUrl,
     credentials: true,
   });
 
@@ -22,10 +26,14 @@ async function bootstrap(): Promise<void> {
   app.setGlobalPrefix('api');
 
   const port = parseInt(process.env['PORT'] ?? '3001', 10);
+  const colyseusPort = process.env['COLYSEUS_PORT'] ?? '2567';
+
   await app.listen(port);
 
-  console.log(`\n  🚀 KL DevVerse API server running on http://localhost:${port}`);
-  console.log(`  📡 Colyseus game server on ws://localhost:${process.env['COLYSEUS_PORT'] ?? '2567'}\n`);
+  console.log(`\n  🚀 KL DevVerse API server running on port ${port}`);
+  console.log(`  📡 Colyseus game server on port ${colyseusPort}`);
+  console.log(`  🌍 Environment: ${nodeEnv}`);
+  console.log(`  🔗 Client: ${clientUrl}\n`);
 }
 
 void bootstrap();

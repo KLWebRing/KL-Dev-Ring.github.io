@@ -1,23 +1,24 @@
-// ── KL DevVerse — House Service ──────────────────────────────────────
-// Manages house CRUD, furniture placement, visitor tracking, project walls.
+// ── KL DevVerse — Builder Studio Service ─────────────────────────────
+// Manages Builder Studio CRUD, furniture placement, visitor tracking,
+// and project wall. Every developer owns exactly ONE studio.
 
 import { Injectable, Logger, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
-export class HouseService {
-  private readonly logger = new Logger(HouseService.name);
+export class StudioService {
+  private readonly logger = new Logger(StudioService.name);
 
   constructor(private readonly prisma: PrismaService) {}
 
-  // ── House CRUD ──────────────────────────────────────────────────────
+  // ── Studio CRUD ─────────────────────────────────────────────────────
 
   /**
-   * Get or create a house for a user.
-   * Every authenticated user automatically gets a house.
+   * Get or create a Builder Studio for a user.
+   * Every authenticated user automatically gets a studio on first access.
    */
-  async getOrCreateHouse(userId: string) {
-    const existing = await this.prisma.house.findUnique({
+  async getOrCreateStudio(userId: string) {
+    const existing = await this.prisma.builderStudio.findUnique({
       where: { userId },
       include: {
         furniture: true,
@@ -29,11 +30,11 @@ export class HouseService {
     });
 
     if (existing) {
-      return this.formatHouse(existing);
+      return this.formatStudio(existing);
     }
 
     // Auto-create with defaults
-    const house = await this.prisma.house.create({
+    const studio = await this.prisma.builderStudio.create({
       data: { userId },
       include: {
         furniture: true,
@@ -44,15 +45,15 @@ export class HouseService {
       },
     });
 
-    this.logger.log(`House auto-created for user ${userId}`);
-    return this.formatHouse(house);
+    this.logger.log(`Builder Studio auto-created for user ${userId}`);
+    return this.formatStudio(studio);
   }
 
   /**
-   * Get a house by user ID (for visiting).
+   * Get a studio by user ID (for visiting).
    */
-  async getHouseByUserId(userId: string) {
-    const house = await this.prisma.house.findUnique({
+  async getStudioByUserId(userId: string) {
+    const studio = await this.prisma.builderStudio.findUnique({
       where: { userId },
       include: {
         furniture: true,
@@ -63,17 +64,17 @@ export class HouseService {
       },
     });
 
-    if (!house) {
-      throw new NotFoundException('House not found');
+    if (!studio) {
+      throw new NotFoundException('Builder Studio not found');
     }
 
-    return this.formatHouse(house);
+    return this.formatStudio(studio);
   }
 
   /**
-   * Update house settings (theme, name, colors).
+   * Update studio settings (theme, name, colors).
    */
-  async updateHouse(userId: string, data: {
+  async updateStudio(userId: string, data: {
     name?: string;
     theme?: string;
     floorMat?: string;
@@ -81,10 +82,10 @@ export class HouseService {
     lightPreset?: string;
     isPublic?: boolean;
   }) {
-    const house = await this.prisma.house.findUnique({ where: { userId } });
-    if (!house) throw new NotFoundException('House not found');
+    const studio = await this.prisma.builderStudio.findUnique({ where: { userId } });
+    if (!studio) throw new NotFoundException('Builder Studio not found');
 
-    return this.prisma.house.update({
+    return this.prisma.builderStudio.update({
       where: { userId },
       data,
     });
@@ -103,25 +104,32 @@ export class HouseService {
     rotation?: number;
     variant?: string;
   }) {
-    const house = await this.prisma.house.findUnique({ where: { userId } });
-    if (!house) throw new NotFoundException('House not found');
+    const studio = await this.prisma.builderStudio.findUnique({ where: { userId } });
+    if (!studio) throw new NotFoundException('Builder Studio not found');
 
-    // Upsert — replace if slot already occupied
-    return this.prisma.placedFurniture.upsert({
-      where: {
-        id: `${house.id}_${data.slotId}`, // Not a real unique, need different approach
-      },
-      create: {
-        houseId: house.id,
+    // Check if slot is already occupied — replace if so
+    const existingInSlot = await this.prisma.studioFurniture.findFirst({
+      where: { studioId: studio.id, slotId: data.slotId },
+    });
+
+    if (existingInSlot) {
+      return this.prisma.studioFurniture.update({
+        where: { id: existingInSlot.id },
+        data: {
+          itemId: data.itemId,
+          posX: data.posX ?? 0,
+          posZ: data.posZ ?? 0,
+          rotation: data.rotation ?? 0,
+          variant: data.variant ?? 'default',
+        },
+      });
+    }
+
+    return this.prisma.studioFurniture.create({
+      data: {
+        studioId: studio.id,
         itemId: data.itemId,
         slotId: data.slotId,
-        posX: data.posX ?? 0,
-        posZ: data.posZ ?? 0,
-        rotation: data.rotation ?? 0,
-        variant: data.variant ?? 'default',
-      },
-      update: {
-        itemId: data.itemId,
         posX: data.posX ?? 0,
         posZ: data.posZ ?? 0,
         rotation: data.rotation ?? 0,
@@ -134,47 +142,47 @@ export class HouseService {
    * Remove furniture from a slot.
    */
   async removeFurniture(userId: string, furnitureId: string) {
-    const house = await this.prisma.house.findUnique({ where: { userId } });
-    if (!house) throw new NotFoundException('House not found');
+    const studio = await this.prisma.builderStudio.findUnique({ where: { userId } });
+    if (!studio) throw new NotFoundException('Builder Studio not found');
 
-    const furniture = await this.prisma.placedFurniture.findUnique({
+    const furniture = await this.prisma.studioFurniture.findUnique({
       where: { id: furnitureId },
     });
 
-    if (!furniture || furniture.houseId !== house.id) {
-      throw new ForbiddenException('Cannot remove furniture from another house');
+    if (!furniture || furniture.studioId !== studio.id) {
+      throw new ForbiddenException('Cannot remove furniture from another studio');
     }
 
-    return this.prisma.placedFurniture.delete({ where: { id: furnitureId } });
+    return this.prisma.studioFurniture.delete({ where: { id: furnitureId } });
   }
 
   // ── Visitors ────────────────────────────────────────────────────────
 
   /**
-   * Record a house visit.
+   * Record a studio visit.
    */
-  async recordVisit(houseId: string, visitorId: string) {
-    return this.prisma.houseVisit.create({
-      data: { houseId, visitorId },
+  async recordVisit(studioId: string, visitorId: string) {
+    return this.prisma.studioVisit.create({
+      data: { studioId, visitorId },
     });
   }
 
   /**
-   * Get recent visitors for a house.
+   * Get recent visitors for a studio.
    */
-  async getRecentVisitors(houseId: string, limit = 20) {
-    return this.prisma.houseVisit.findMany({
-      where: { houseId },
+  async getRecentVisitors(studioId: string, limit = 20) {
+    return this.prisma.studioVisit.findMany({
+      where: { studioId },
       orderBy: { visitedAt: 'desc' },
       take: limit,
     });
   }
 
   /**
-   * Get visitor count for a house.
+   * Get visitor count for a studio.
    */
-  async getVisitorCount(houseId: string): Promise<number> {
-    return this.prisma.houseVisit.count({ where: { houseId } });
+  async getVisitorCount(studioId: string): Promise<number> {
+    return this.prisma.studioVisit.count({ where: { studioId } });
   }
 
   // ── Project Wall ────────────────────────────────────────────────────
@@ -188,8 +196,8 @@ export class HouseService {
     description: string;
     slotIndex: number;
   }) {
-    const house = await this.prisma.house.findUnique({ where: { userId } });
-    if (!house) throw new NotFoundException('House not found');
+    const studio = await this.prisma.builderStudio.findUnique({ where: { userId } });
+    if (!studio) throw new NotFoundException('Builder Studio not found');
 
     if (data.slotIndex < 0 || data.slotIndex > 5) {
       throw new ForbiddenException('Slot index must be 0-5');
@@ -197,10 +205,10 @@ export class HouseService {
 
     return this.prisma.projectDisplay.upsert({
       where: {
-        houseId_slotIndex: { houseId: house.id, slotIndex: data.slotIndex },
+        studioId_slotIndex: { studioId: studio.id, slotIndex: data.slotIndex },
       },
       create: {
-        houseId: house.id,
+        studioId: studio.id,
         repoUrl: data.repoUrl,
         repoName: data.repoName,
         description: data.description,
@@ -220,21 +228,21 @@ export class HouseService {
    * Unpin a project from the wall.
    */
   async unpinProject(userId: string, slotIndex: number) {
-    const house = await this.prisma.house.findUnique({ where: { userId } });
-    if (!house) throw new NotFoundException('House not found');
+    const studio = await this.prisma.builderStudio.findUnique({ where: { userId } });
+    if (!studio) throw new NotFoundException('Builder Studio not found');
 
     return this.prisma.projectDisplay.deleteMany({
-      where: { houseId: house.id, slotIndex },
+      where: { studioId: studio.id, slotIndex },
     });
   }
 
   // ── Helpers ─────────────────────────────────────────────────────────
 
-  private formatHouse(house: {
+  private formatStudio(studio: {
     id: string;
     userId: string;
     name: string;
-    level: number;
+    tier: number;
     theme: string;
     floorMat: string;
     wallColor: string;
@@ -248,23 +256,23 @@ export class HouseService {
     _count: { visitors: number };
   }) {
     return {
-      id: house.id,
-      userId: house.userId,
-      ownerUsername: house.user.username,
-      ownerAvatar: house.user.avatarUrl,
-      ownerDisplayName: house.user.displayName,
-      name: house.name,
-      level: house.level,
-      theme: house.theme,
-      floorMat: house.floorMat,
-      wallColor: house.wallColor,
-      lightPreset: house.lightPreset,
-      isPublic: house.isPublic,
-      plotX: house.plotX,
-      plotZ: house.plotZ,
-      furniture: house.furniture,
-      projectWall: house.projectWall,
-      visitorCount: house._count.visitors,
+      id: studio.id,
+      userId: studio.userId,
+      ownerUsername: studio.user.username,
+      ownerAvatar: studio.user.avatarUrl,
+      ownerDisplayName: studio.user.displayName,
+      name: studio.name,
+      tier: studio.tier,
+      theme: studio.theme,
+      floorMat: studio.floorMat,
+      wallColor: studio.wallColor,
+      lightPreset: studio.lightPreset,
+      isPublic: studio.isPublic,
+      plotX: studio.plotX,
+      plotZ: studio.plotZ,
+      furniture: studio.furniture,
+      projectWall: studio.projectWall,
+      visitorCount: studio._count.visitors,
     };
   }
 }

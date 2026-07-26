@@ -1,41 +1,41 @@
-// ── KL DevVerse — House Scene ────────────────────────────────────────
-// R3F component that renders the house interior.
-// Replaces WorldScene when viewState is 'house'.
+// ── KL DevVerse — Studio Scene ───────────────────────────────────────
+// R3F component that renders the Builder Studio interior.
+// Replaces WorldScene when viewState is 'studio'.
 
 import { useEffect, useRef } from 'react';
-import { useThree, useFrame } from '@react-three/fiber';
+import { useThree } from '@react-three/fiber';
 import { Group, PointLight, AmbientLight } from 'three';
-import { createHouseInterior, HOUSE_FURNITURE_SLOTS } from '@/house/HouseInterior';
-import { createFurnitureMesh } from '@/house/FurnitureRenderer';
-import { useHouseStore } from '@/house/houseStore';
-import { HOUSE } from '@/shared/constants';
-import type { PlacedFurniture, HouseTheme } from '@/shared/types';
+import { createStudioInterior, STUDIO_FURNITURE_SLOTS } from '@/studio/StudioInterior';
+import { createFurnitureMesh } from '@/studio/FurnitureRenderer';
+import { useStudioStore } from '@/studio/studioStore';
+import { STUDIO } from '@/shared/constants';
+import type { StudioFurniture, StudioTheme } from '@/shared/types';
 
-export function HouseScene(): null {
+export function StudioScene(): null {
   const { scene } = useThree();
-  const houseGroupRef = useRef<Group | null>(null);
+  const studioGroupRef = useRef<Group | null>(null);
   const furnitureGroupRef = useRef<Group | null>(null);
 
-  const house = useHouseStore(s => s.currentHouse);
-  const isInHouse = useHouseStore(s => s.isInHouse);
+  const studio = useStudioStore(s => s.currentStudio);
+  const isInStudio = useStudioStore(s => s.isInStudio);
 
   useEffect(() => {
-    if (!isInHouse || !house) return;
+    if (!isInStudio || !studio) return;
 
-    // Clean up any previous house
-    if (houseGroupRef.current) {
-      scene.remove(houseGroupRef.current);
+    // Clean up any previous studio
+    if (studioGroupRef.current) {
+      scene.remove(studioGroupRef.current);
     }
 
     // ── Build Interior ──────────────────────────────────────────────
-    const interiorGroup = createHouseInterior(house.theme as HouseTheme);
-    interiorGroup.name = 'houseScene';
+    const interiorGroup = createStudioInterior(studio.theme as StudioTheme);
+    interiorGroup.name = 'studioScene';
     scene.add(interiorGroup);
-    houseGroupRef.current = interiorGroup;
+    studioGroupRef.current = interiorGroup;
 
     // ── Interior Lighting ───────────────────────────────────────────
     const mainLight = new PointLight(0xfff4e0, 1.2, 15, 0.5);
-    mainLight.position.set(0, HOUSE.INTERIOR_HEIGHT - 0.5, 0);
+    mainLight.position.set(0, STUDIO.INTERIOR_HEIGHT - 0.5, 0);
     mainLight.castShadow = true;
     mainLight.shadow.mapSize.set(512, 512);
     interiorGroup.add(mainLight);
@@ -54,29 +54,29 @@ export function HouseScene(): null {
     interiorGroup.add(furnGroup);
     furnitureGroupRef.current = furnGroup;
 
-    placeFurniture(furnGroup, house.furniture);
+    placeFurniture(furnGroup, studio.furniture);
 
     // ── Owner Name Label (on back wall) ─────────────────────────────
     // TODO: Canvas texture for owner name — deferred to polish step
 
     return () => {
-      if (houseGroupRef.current) {
-        scene.remove(houseGroupRef.current);
-        houseGroupRef.current = null;
+      if (studioGroupRef.current) {
+        scene.remove(studioGroupRef.current);
+        studioGroupRef.current = null;
       }
     };
-  }, [isInHouse, house, scene]);
+  }, [isInStudio, studio, scene]);
 
   // Update furniture when placement changes
   useEffect(() => {
-    if (!furnitureGroupRef.current || !house) return;
+    if (!furnitureGroupRef.current || !studio) return;
     // Clear and re-place
     const group = furnitureGroupRef.current;
     while (group.children.length > 0) {
       group.remove(group.children[0]!);
     }
-    placeFurniture(group, house.furniture);
-  }, [house?.furniture]);
+    placeFurniture(group, studio.furniture);
+  }, [studio?.furniture]);
 
   return null;
 }
@@ -84,13 +84,13 @@ export function HouseScene(): null {
 /**
  * Place furniture meshes at their slot positions.
  */
-function placeFurniture(group: Group, furniture: readonly PlacedFurniture[]): void {
+function placeFurniture(group: Group, furniture: readonly StudioFurniture[]): void {
   for (const placed of furniture) {
     const mesh = createFurnitureMesh(placed.itemId, placed.variant);
     if (!mesh) continue;
 
     // Find the slot definition for position
-    const slot = HOUSE_FURNITURE_SLOTS.find(s => s.slotId === placed.slotId);
+    const slot = STUDIO_FURNITURE_SLOTS.find(s => s.slotId === placed.slotId);
     if (slot) {
       mesh.position.set(slot.posX, slot.posY, slot.posZ);
       mesh.rotation.y = slot.rotation + placed.rotation;

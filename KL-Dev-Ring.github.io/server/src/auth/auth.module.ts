@@ -9,6 +9,7 @@ import { AuthController } from './auth.controller';
 import { GitHubStrategy } from './github.strategy';
 import { JwtStrategy } from './jwt.strategy';
 import { UsersModule } from '../users/users.module';
+import { StudioModule } from '../studio/studio.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { UsersModule } from '../users/users.module';
       }),
     }),
     UsersModule,
+    StudioModule,
   ],
   providers: [AuthService, GitHubStrategy, JwtStrategy],
   controllers: [AuthController],

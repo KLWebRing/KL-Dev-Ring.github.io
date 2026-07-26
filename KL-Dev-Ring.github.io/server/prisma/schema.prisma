@@ -1,10 +1,11 @@
 // ── KL DevVerse — Database Schema ────────────────────────────────────
-// PostgreSQL via Prisma. All Phase 2 tables.
+// PostgreSQL via Prisma. Cloud-native with Neon PostgreSQL.
 // Future phases add models without modifying existing ones.
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 generator client {
@@ -39,7 +40,7 @@ model User {
   profile          UserProfile?
 
   // Phase 3 relations
-  house           House?
+  studio          BuilderStudio?
   inventory       InventoryItem[]
   wardrobe        WardrobeItem[]
   achievements    Achievement[]
@@ -170,14 +171,14 @@ model UserSettings {
 // Phase 3 — Builder Identity
 // ═══════════════════════════════════════════════════════════════════════
 
-// ── House ────────────────────────────────────────────────────────────
+// ── Builder Studio ───────────────────────────────────────────────────
 
-model House {
+model BuilderStudio {
   id          String   @id @default(cuid())
   userId      String   @unique
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name        String   @default("My House")
-  level       Int      @default(1)
+  name        String   @default("My Studio")
+  tier        Int      @default(1)   // 1=Garage, 2=Workspace, 3=Professional, 4=Innovation Lab, 5=Startup Office, 6=Campus
   theme       String   @default("default")
   floorMat    String   @default("wood")
   wallColor   String   @default("#2a2a3a")
@@ -188,37 +189,37 @@ model House {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  furniture   PlacedFurniture[]
-  decorations PlacedDecoration[]
-  visitors    HouseVisit[]
+  furniture   StudioFurniture[]
+  decorations StudioDecoration[]
+  visitors    StudioVisit[]
   projectWall ProjectDisplay[]
 }
 
-model PlacedFurniture {
-  id       String @id @default(cuid())
-  houseId  String
-  house    House  @relation(fields: [houseId], references: [id], onDelete: Cascade)
+model StudioFurniture {
+  id       String        @id @default(cuid())
+  studioId String
+  studio   BuilderStudio @relation(fields: [studioId], references: [id], onDelete: Cascade)
   itemId   String
   slotId   String
-  posX     Float  @default(0)
-  posZ     Float  @default(0)
-  rotation Float  @default(0)
-  variant  String @default("default")
+  posX     Float         @default(0)
+  posZ     Float         @default(0)
+  rotation Float         @default(0)
+  variant  String        @default("default")
 
-  @@index([houseId])
+  @@index([studioId])
 }
 
-model PlacedDecoration {
-  id       String @id @default(cuid())
-  houseId  String
-  house    House  @relation(fields: [houseId], references: [id], onDelete: Cascade)
+model StudioDecoration {
+  id       String        @id @default(cuid())
+  studioId String
+  studio   BuilderStudio @relation(fields: [studioId], references: [id], onDelete: Cascade)
   itemId   String
   wallId   String
-  posX     Float  @default(0)
-  posY     Float  @default(0)
-  rotation Float  @default(0)
+  posX     Float         @default(0)
+  posY     Float         @default(0)
+  rotation Float         @default(0)
 
-  @@index([houseId])
+  @@index([studioId])
 }
 
 // ── Inventory ────────────────────────────────────────────────────────
@@ -300,16 +301,16 @@ model Achievement {
   @@index([userId])
 }
 
-// ── House Visits ─────────────────────────────────────────────────────
+// ── Studio Visits ────────────────────────────────────────────────────
 
-model HouseVisit {
-  id        String   @id @default(cuid())
-  houseId   String
-  house     House    @relation(fields: [houseId], references: [id], onDelete: Cascade)
+model StudioVisit {
+  id        String        @id @default(cuid())
+  studioId  String
+  studio    BuilderStudio @relation(fields: [studioId], references: [id], onDelete: Cascade)
   visitorId String
-  visitedAt DateTime @default(now())
+  visitedAt DateTime      @default(now())
 
-  @@index([houseId, visitedAt])
+  @@index([studioId, visitedAt])
   @@index([visitorId])
 }
 
@@ -317,14 +318,14 @@ model HouseVisit {
 
 model ProjectDisplay {
   id          String  @id @default(cuid())
-  houseId     String
-  house       House   @relation(fields: [houseId], references: [id], onDelete: Cascade)
+  studioId    String
+  studio      BuilderStudio @relation(fields: [studioId], references: [id], onDelete: Cascade)
   repoUrl     String
   repoName    String
   description String  @default("")
   slotIndex   Int
   pinned      Boolean @default(false)
 
-  @@unique([houseId, slotIndex])
-  @@index([houseId])
+  @@unique([studioId, slotIndex])
+  @@index([studioId])
 }

@@ -111,7 +111,7 @@ export interface Structure {
 
 export type NPCBehaviorType = 'resident' | 'shopkeeper' | 'customer_walk' | 'customer_sit';
 export type AnimationState = 'idle' | 'walk' | 'run' | 'wave' | 'celebrate' | 'sit' | 'jump' | 'landing' | 'talk';
-export type ViewState = 'town' | 'workshop' | 'house';
+export type ViewState = 'town' | 'workshop' | 'studio';
 
 export interface InteractableItem {
   readonly x: number;
@@ -333,48 +333,49 @@ export interface PlayerInteraction {
 // Phase 3 — Builder Identity Types
 // ═══════════════════════════════════════════════════════════════════════
 
-// ── House ────────────────────────────────────────────────────────────
+// ── Builder Studio ───────────────────────────────────────────────────────
 
-export type HouseTheme = 'default' | 'kerala_traditional' | 'cyberpunk' | 'minimal_white' | 'dark_studio' | 'tropical';
+export type StudioTheme = 'default' | 'kerala_traditional' | 'cyberpunk' | 'minimal_white' | 'dark_studio' | 'tropical';
 
-export interface House {
+export interface BuilderStudio {
   readonly id: string;
   readonly userId: string;
   readonly ownerUsername: string;
   readonly ownerAvatar: string;
+  readonly ownerDisplayName: string;
   readonly name: string;
-  readonly level: number;
-  readonly theme: HouseTheme;
+  readonly tier: number;   // 1=Garage, 2=Workspace, 3=Professional, 4=Innovation Lab, 5=Startup Office, 6=Campus
+  readonly theme: StudioTheme;
   readonly floorMat: string;
   readonly wallColor: string;
   readonly lightPreset: string;
   readonly isPublic: boolean;
   readonly plotX: number;
   readonly plotZ: number;
-  readonly furniture: readonly PlacedFurniture[];
+  readonly furniture: readonly StudioFurniture[];
   readonly projectWall: readonly ProjectDisplay[];
   readonly visitorCount: number;
 }
 
-export interface PlacedFurniture {
+export interface StudioFurniture {
   readonly id: string;
   readonly itemId: string;    // references FurnitureCatalogEntry.id
-  readonly slotId: string;    // e.g. "living_room_desk_1"
+  readonly slotId: string;    // e.g. "workspace_desk_1"
   readonly posX: number;
   readonly posZ: number;
   readonly rotation: number;
   readonly variant: string;
 }
 
-export interface HouseInteriorState {
-  readonly houseId: string;
+export interface StudioInteriorState {
+  readonly studioId: string;
   readonly ownerId: string;
   readonly isOwner: boolean;
-  readonly house: House;
+  readonly studio: BuilderStudio;
   readonly isLoading: boolean;
 }
 
-export interface HouseVisit {
+export interface StudioVisit {
   readonly id: string;
   readonly visitorId: string;
   readonly visitorName: string;
@@ -387,13 +388,13 @@ export interface HouseVisit {
 export interface FurnitureSlot {
   readonly slotId: string;
   readonly label: string;
-  readonly room: 'living_room' | 'workspace' | 'bedroom' | 'display' | 'expansion';
+  readonly room: 'main_workspace' | 'lounge' | 'display' | 'server_room' | 'meeting' | 'expansion';
   readonly posX: number;
   readonly posY: number;
   readonly posZ: number;
   readonly rotation: number;
   readonly allowedCategories: readonly string[];   // e.g. ['desk', 'table']
-  readonly requiredHouseLevel: number;
+  readonly requiredStudioTier: number;
 }
 
 // ── Project Display ──────────────────────────────────────────────────
@@ -463,7 +464,7 @@ export interface BuilderLevel {
   readonly title: string;
   readonly requiredXp: number;
   readonly perks: readonly string[];
-  readonly houseUnlock: string | null;
+  readonly studioUnlock: string | null;
 }
 
 // ── Achievements ─────────────────────────────────────────────────────

@@ -1,5 +1,5 @@
-// ── KL DevVerse — House Interior ─────────────────────────────────────
-// Procedural low-poly house interior geometry using Three.js.
+// ── KL DevVerse — Studio Interior ────────────────────────────────────
+// Procedural low-poly Builder Studio interior geometry using Three.js.
 // Matches the existing art style: MeshToonMaterial, soft outlines.
 
 import {
@@ -13,10 +13,9 @@ import {
   MeshBasicMaterial,
   Color,
   BackSide,
-  DoubleSide,
 } from 'three';
-import { HOUSE } from '@/shared/constants';
-import type { HouseTheme } from '@/shared/types';
+import { STUDIO } from '@/shared/constants';
+import type { StudioTheme } from '@/shared/types';
 
 // ── Toon Mesh Helper (matches world style) ─────────────────────────
 
@@ -38,8 +37,8 @@ function toonMesh(
 
 // ── Theme Colors ────────────────────────────────────────────────────
 
-function getThemeColors(theme: HouseTheme) {
-  const themeData = HOUSE.THEMES.find(t => t.id === theme) ?? HOUSE.THEMES[0]!;
+function getThemeColors(theme: StudioTheme) {
+  const themeData = STUDIO.THEMES.find(t => t.id === theme) ?? STUDIO.THEMES[0]!;
   return {
     wall: new Color(themeData.wallColor),
     floor: new Color(themeData.floorColor),
@@ -49,14 +48,14 @@ function getThemeColors(theme: HouseTheme) {
 
 // ── Build Interior ──────────────────────────────────────────────────
 
-export function createHouseInterior(theme: HouseTheme = 'default'): Group {
+export function createStudioInterior(theme: StudioTheme = 'default'): Group {
   const group = new Group();
-  group.name = 'houseInterior';
+  group.name = 'studioInterior';
 
-  const W = HOUSE.INTERIOR_WIDTH;
-  const D = HOUSE.INTERIOR_DEPTH;
-  const H = HOUSE.INTERIOR_HEIGHT;
-  const T = HOUSE.WALL_THICKNESS;
+  const W = STUDIO.INTERIOR_WIDTH;
+  const D = STUDIO.INTERIOR_DEPTH;
+  const H = STUDIO.INTERIOR_HEIGHT;
+  const T = STUDIO.WALL_THICKNESS;
 
   const colors = getThemeColors(theme);
 
@@ -112,8 +111,8 @@ export function createHouseInterior(theme: HouseTheme = 'default'): Group {
   group.add(rightWall);
 
   // Front wall (south) with door cutout — two segments
-  const doorW = HOUSE.DOOR_WIDTH;
-  const doorH = HOUSE.DOOR_HEIGHT;
+  const doorW = STUDIO.DOOR_WIDTH;
+  const doorH = STUDIO.DOOR_HEIGHT;
   const sideW = (W - doorW) / 2;
 
   // Left segment
@@ -203,35 +202,35 @@ export function createHouseInterior(theme: HouseTheme = 'default'): Group {
 
 import type { FurnitureSlot } from '@/shared/types';
 
-export const HOUSE_FURNITURE_SLOTS: readonly FurnitureSlot[] = [
-  // Workspace (left side)
-  { slotId: 'workspace_desk_1',    label: 'Workspace Desk',    room: 'workspace',   posX: -4,   posY: 0, posZ: -3,   rotation: 0,     allowedCategories: ['desk', 'table'],      requiredHouseLevel: 1 },
-  { slotId: 'workspace_chair_1',   label: 'Workspace Chair',   room: 'workspace',   posX: -4,   posY: 0, posZ: -1.5, rotation: Math.PI, allowedCategories: ['chair'],             requiredHouseLevel: 1 },
-  { slotId: 'workspace_monitor_1', label: 'Monitor',           room: 'workspace',   posX: -4,   posY: 0.7, posZ: -3.8, rotation: 0,   allowedCategories: ['monitor', 'laptop'],  requiredHouseLevel: 1 },
-  { slotId: 'workspace_lamp_1',    label: 'Desk Lamp',         room: 'workspace',   posX: -5,   posY: 0.7, posZ: -3.5, rotation: 0,   allowedCategories: ['lamp'],               requiredHouseLevel: 1 },
-  { slotId: 'workspace_board_1',   label: 'Whiteboard',        room: 'workspace',   posX: -5.5, posY: 1.5, posZ: -4.5, rotation: 0,   allowedCategories: ['whiteboard'],          requiredHouseLevel: 2 },
+export const STUDIO_FURNITURE_SLOTS: readonly FurnitureSlot[] = [
+  // Main Workspace (left side)
+  { slotId: 'workspace_desk_1',    label: 'Dev Desk',          room: 'main_workspace', posX: -4,   posY: 0,   posZ: -3,   rotation: 0,            allowedCategories: ['desk', 'table'],      requiredStudioTier: 1 },
+  { slotId: 'workspace_chair_1',   label: 'Dev Chair',         room: 'main_workspace', posX: -4,   posY: 0,   posZ: -1.5, rotation: Math.PI,      allowedCategories: ['chair'],               requiredStudioTier: 1 },
+  { slotId: 'workspace_monitor_1', label: 'Monitor',           room: 'main_workspace', posX: -4,   posY: 0.7, posZ: -3.8, rotation: 0,            allowedCategories: ['monitor', 'laptop'],   requiredStudioTier: 1 },
+  { slotId: 'workspace_lamp_1',    label: 'Desk Lamp',         room: 'main_workspace', posX: -5,   posY: 0.7, posZ: -3.5, rotation: 0,            allowedCategories: ['lamp'],                requiredStudioTier: 1 },
+  { slotId: 'workspace_board_1',   label: 'Whiteboard',        room: 'main_workspace', posX: -5.5, posY: 1.5, posZ: -4.5, rotation: 0,            allowedCategories: ['whiteboard'],           requiredStudioTier: 2 },
 
-  // Living Room (right side)
-  { slotId: 'living_room_sofa_1',  label: 'Sofa',              room: 'living_room', posX: 3,    posY: 0, posZ: -2,   rotation: -Math.PI / 2, allowedCategories: ['sofa'],          requiredHouseLevel: 1 },
-  { slotId: 'living_room_table_1', label: 'Coffee Table',      room: 'living_room', posX: 2,    posY: 0, posZ: -2,   rotation: 0,     allowedCategories: ['table', 'desk'],      requiredHouseLevel: 1 },
-  { slotId: 'living_room_shelf_1', label: 'Bookshelf',         room: 'living_room', posX: 4.5,  posY: 0, posZ: -4,   rotation: Math.PI / 2, allowedCategories: ['bookshelf', 'shelf'], requiredHouseLevel: 1 },
-  { slotId: 'living_room_plant_1', label: 'Plant Corner',      room: 'living_room', posX: 5,    posY: 0, posZ: 3,    rotation: 0,     allowedCategories: ['plant'],              requiredHouseLevel: 1 },
-  { slotId: 'living_room_lamp_1',  label: 'Floor Lamp',        room: 'living_room', posX: 5,    posY: 0, posZ: -1,   rotation: 0,     allowedCategories: ['lamp'],               requiredHouseLevel: 1 },
+  // Lounge (right side — Tier 3+)
+  { slotId: 'lounge_sofa_1',       label: 'Sofa',              room: 'lounge',         posX: 3,    posY: 0,   posZ: -2,   rotation: -Math.PI / 2, allowedCategories: ['sofa'],                requiredStudioTier: 1 },
+  { slotId: 'lounge_table_1',      label: 'Coffee Table',      room: 'lounge',         posX: 2,    posY: 0,   posZ: -2,   rotation: 0,            allowedCategories: ['table', 'desk'],       requiredStudioTier: 1 },
+  { slotId: 'lounge_shelf_1',      label: 'Bookshelf',         room: 'lounge',         posX: 4.5,  posY: 0,   posZ: -4,   rotation: Math.PI / 2,  allowedCategories: ['bookshelf', 'shelf'],  requiredStudioTier: 1 },
+  { slotId: 'lounge_plant_1',      label: 'Plant Corner',      room: 'lounge',         posX: 5,    posY: 0,   posZ: 3,    rotation: 0,            allowedCategories: ['plant'],               requiredStudioTier: 1 },
+  { slotId: 'lounge_lamp_1',       label: 'Floor Lamp',        room: 'lounge',         posX: 5,    posY: 0,   posZ: -1,   rotation: 0,            allowedCategories: ['lamp'],                requiredStudioTier: 1 },
 
-  // Display Wall (back wall — Level 5+)
-  { slotId: 'display_shelf_1',     label: 'Display Shelf',     room: 'display',     posX: 0,    posY: 1.8, posZ: -4.6, rotation: 0,   allowedCategories: ['shelf', 'bookshelf'], requiredHouseLevel: 5 },
-  { slotId: 'display_projector_1', label: 'Projector',         room: 'display',     posX: 0,    posY: 2.5, posZ: -4.6, rotation: 0,   allowedCategories: ['projector'],           requiredHouseLevel: 5 },
+  // Display Wall (back wall — Tier 5+)
+  { slotId: 'display_shelf_1',     label: 'Display Shelf',     room: 'display',        posX: 0,    posY: 1.8, posZ: -4.6, rotation: 0,            allowedCategories: ['shelf', 'bookshelf'],  requiredStudioTier: 5 },
+  { slotId: 'display_projector_1', label: 'Projector',         room: 'display',        posX: 0,    posY: 2.5, posZ: -4.6, rotation: 0,            allowedCategories: ['projector'],            requiredStudioTier: 5 },
 
-  // Bedroom (Level 3+)
-  { slotId: 'bedroom_bed_1',       label: 'Bed',               room: 'bedroom',     posX: -4,   posY: 0, posZ: 3,    rotation: 0,     allowedCategories: ['sofa'],               requiredHouseLevel: 3 },
-  { slotId: 'bedroom_lamp_1',      label: 'Bedside Lamp',      room: 'bedroom',     posX: -5,   posY: 0.5, posZ: 4,  rotation: 0,     allowedCategories: ['lamp'],               requiredHouseLevel: 3 },
+  // Server Room (Tier 6+)
+  { slotId: 'server_rack_1',       label: 'Server Rack',       room: 'server_room',    posX: -4,   posY: 0,   posZ: 3,    rotation: 0,            allowedCategories: ['sofa'],                requiredStudioTier: 6 },
+  { slotId: 'server_lamp_1',       label: 'Server Room Lamp',  room: 'server_room',    posX: -5,   posY: 0.5, posZ: 4,    rotation: 0,            allowedCategories: ['lamp'],                requiredStudioTier: 6 },
 
-  // Expansion (Level 9+)
-  { slotId: 'expansion_slot_1',    label: 'Expansion 1',       room: 'expansion',   posX: 0,    posY: 0, posZ: 2,    rotation: 0,     allowedCategories: ['desk', 'table', 'sofa', 'bookshelf', 'plant'], requiredHouseLevel: 9 },
-  { slotId: 'expansion_slot_2',    label: 'Expansion 2',       room: 'expansion',   posX: 2,    posY: 0, posZ: 2,    rotation: 0,     allowedCategories: ['desk', 'table', 'sofa', 'bookshelf', 'plant'], requiredHouseLevel: 9 },
+  // Meeting Room (Tier 9+)
+  { slotId: 'meeting_slot_1',      label: 'Meeting Table',     room: 'meeting',        posX: 0,    posY: 0,   posZ: 2,    rotation: 0,            allowedCategories: ['desk', 'table', 'sofa', 'bookshelf', 'plant'], requiredStudioTier: 9 },
+  { slotId: 'meeting_slot_2',      label: 'Meeting Chairs',    room: 'meeting',        posX: 2,    posY: 0,   posZ: 2,    rotation: 0,            allowedCategories: ['desk', 'table', 'sofa', 'bookshelf', 'plant'], requiredStudioTier: 9 },
 ] as const;
 
-/** Get available slots for a given house level */
-export function getAvailableSlots(houseLevel: number): readonly FurnitureSlot[] {
-  return HOUSE_FURNITURE_SLOTS.filter(s => s.requiredHouseLevel <= houseLevel);
+/** Get available slots for a given studio tier */
+export function getAvailableSlots(studioTier: number): readonly FurnitureSlot[] {
+  return STUDIO_FURNITURE_SLOTS.filter(s => s.requiredStudioTier <= studioTier);
 }

@@ -7,6 +7,7 @@ import { ConfigService } from '@nestjs/config';
 import { UsersService, CreateUserInput } from '../users/users.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
+import { StudioService } from '../studio/studio.service';
 import * as crypto from 'crypto';
 
 interface GitHubProfile {
@@ -29,6 +30,7 @@ export class AuthService {
     private readonly config: ConfigService,
     private readonly prisma: PrismaService,
     private readonly redis: RedisService,
+    private readonly studioService: StudioService,
   ) {}
 
   /**
@@ -75,6 +77,15 @@ export class AuthService {
     );
 
     this.logger.log(`User logged in: @${user.username}`);
+
+    // ── Auto-Provision Builder Studio on first login ─────────────
+    // This is idempotent — getOrCreateStudio only creates if missing.
+    try {
+      await this.studioService.getOrCreateStudio(user.id);
+    } catch (err) {
+      this.logger.warn(`Failed to auto-provision studio for ${user.id}: ${err}`);
+      // Non-critical — login still succeeds
+    }
 
     return {
       accessToken,

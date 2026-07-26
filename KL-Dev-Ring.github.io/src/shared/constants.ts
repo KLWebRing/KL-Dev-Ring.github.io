@@ -153,20 +153,20 @@ export const EMOTE = {
 
 import type { BuilderLevel } from '@/shared/types';
 
-/** Builder level progression. XP thresholds, titles, perks, house unlocks. */
+/** Builder level progression. XP thresholds, titles, perks, studio unlocks. */
 export const BUILDER_LEVELS: readonly BuilderLevel[] = [
-  { level: 1,  title: 'Newcomer',         requiredXp: 0,     perks: ['Basic house'],                         houseUnlock: null },
-  { level: 2,  title: 'Apprentice',       requiredXp: 100,   perks: ['House theme selection'],                houseUnlock: null },
-  { level: 3,  title: 'Tinkerer',         requiredXp: 300,   perks: ['Extra furniture slot', 'Bedroom'],      houseUnlock: 'bedroom' },
-  { level: 4,  title: 'Craftsman',        requiredXp: 600,   perks: ['Custom wall color'],                    houseUnlock: null },
-  { level: 5,  title: 'Builder',          requiredXp: 1000,  perks: ['Display Gallery', 'Project wall ×6'],   houseUnlock: 'display' },
-  { level: 6,  title: 'Architect',        requiredXp: 1500,  perks: ['Rooftop garden'],                       houseUnlock: 'rooftop' },
-  { level: 7,  title: 'Engineer',         requiredXp: 2200,  perks: ['Rare furniture access'],                houseUnlock: null },
-  { level: 8,  title: 'Lead',             requiredXp: 3000,  perks: ['Epic furniture access'],                houseUnlock: null },
-  { level: 9,  title: 'Principal',        requiredXp: 4000,  perks: ['House expansion slot'],                 houseUnlock: 'expansion' },
-  { level: 10, title: 'Distinguished',    requiredXp: 5500,  perks: ['Legendary cosmetics'],                  houseUnlock: null },
-  { level: 11, title: 'Fellow',           requiredXp: 7500,  perks: ['Custom house name glow'],               houseUnlock: null },
-  { level: 12, title: 'Luminary',         requiredXp: 10000, perks: ['Golden builder badge', 'All unlocked'], houseUnlock: null },
+  { level: 1,  title: 'Newcomer',         requiredXp: 0,     perks: ['Garage studio'],                         studioUnlock: null },
+  { level: 2,  title: 'Apprentice',       requiredXp: 100,   perks: ['Studio theme selection'],                 studioUnlock: null },
+  { level: 3,  title: 'Tinkerer',         requiredXp: 300,   perks: ['Extra furniture slot', 'Lounge area'],    studioUnlock: 'lounge' },
+  { level: 4,  title: 'Craftsman',        requiredXp: 600,   perks: ['Custom wall color'],                      studioUnlock: null },
+  { level: 5,  title: 'Builder',          requiredXp: 1000,  perks: ['Display Gallery', 'Project wall ×6'],     studioUnlock: 'display' },
+  { level: 6,  title: 'Architect',        requiredXp: 1500,  perks: ['Server room'],                            studioUnlock: 'server_room' },
+  { level: 7,  title: 'Engineer',         requiredXp: 2200,  perks: ['Rare furniture access'],                  studioUnlock: null },
+  { level: 8,  title: 'Lead',             requiredXp: 3000,  perks: ['Epic furniture access'],                  studioUnlock: null },
+  { level: 9,  title: 'Principal',        requiredXp: 4000,  perks: ['Meeting room expansion'],                 studioUnlock: 'meeting' },
+  { level: 10, title: 'Distinguished',    requiredXp: 5500,  perks: ['Legendary cosmetics'],                    studioUnlock: null },
+  { level: 11, title: 'Fellow',           requiredXp: 7500,  perks: ['Custom studio name glow'],                studioUnlock: null },
+  { level: 12, title: 'Luminary',         requiredXp: 10000, perks: ['Golden builder badge', 'All unlocked'],   studioUnlock: null },
 ] as const;
 
 /** Get builder level info for a given XP amount */
@@ -190,8 +190,8 @@ export function getBuilderLevel(totalXp: number): { level: number; title: string
   };
 }
 
-/** House configuration constants */
-export const HOUSE = {
+/** Builder Studio configuration constants */
+export const STUDIO = {
   /** Interior dimensions (world units) */
   INTERIOR_WIDTH: 12,
   INTERIOR_DEPTH: 10,
@@ -207,7 +207,7 @@ export const HOUSE = {
   MAX_PROJECT_WALL_SLOTS: 6,
   MAX_DECORATIONS: 30,
 
-  /** Housing district location in the town */
+  /** Studio district location in the town */
   DISTRICT_CENTER_X: 30,
   DISTRICT_CENTER_Z: -20,
   PLOT_SPACING: 8,

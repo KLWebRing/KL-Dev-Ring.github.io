@@ -1,6 +1,7 @@
 // ── KL DevVerse — Game Engine (R3F) ─────────────────────────────────
 // The main Three.js/R3F scene. Lives inside a <Canvas> element.
 // Orchestrates: scene setup, player, camera, world, NPCs, game loop.
+// Phase 4: wired to WorldEngine for time/districts/streaming.
 
 import { useEffect, useRef, useCallback } from 'react';
 import { useThree, useFrame } from '@react-three/fiber';
@@ -21,6 +22,7 @@ import { useGameStore } from '@/stores/gameStore';
 import { useUIStore } from '@/stores/uiStore';
 import { COLORS, RENDER, WORLD } from '@/shared/constants';
 import { createCharacter, animateCharacter } from '@/entities/character/characterSystem';
+import { worldEngine } from '@/world/engine/WorldEngine';
 
 export function GameEngine(): null {
   const { scene, gl, size, set } = useThree();
@@ -96,9 +98,14 @@ export function GameEngine(): null {
     gl.setPixelRatio(Math.min(window.devicePixelRatio, RENDER.MAX_PIXEL_RATIO));
     gl.shadowMap.enabled = true;
 
+    // Initialize World Engine (Phase 4)
+    worldEngine.init();
+    worldEngine.initScene(scene);
+
     return () => {
       inputManager.unbind();
       scene.remove(playerGroup);
+      worldEngine.dispose();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -135,6 +142,10 @@ export function GameEngine(): null {
 
     // Update player
     ctrl.update(dt, input);
+
+    // Update World Engine (Phase 4 — time, districts, streaming)
+    worldEngine.update(dt);
+    worldEngine.updatePlayerPosition(ctrl.x, ctrl.z);
 
     // Update camera
     camCtrl.update(
