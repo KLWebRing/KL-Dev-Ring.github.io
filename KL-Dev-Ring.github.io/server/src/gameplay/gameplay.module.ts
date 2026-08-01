@@ -8,12 +8,14 @@ import { BuilderModule } from '../builder/builder.module';
 import { MissionService } from './mission.service';
 import { MissionController } from './mission.controller';
 import { QuestService } from './quest.service';
+import { CareerService } from './career.service';
 
 @Module({
   imports: [PrismaModule, EconomyModule, BuilderModule],
   controllers: [MissionController],
-  providers: [MissionService, QuestService],
-  exports: [MissionService, QuestService],
+  providers: [MissionService, QuestService, CareerService],
+  exports: [MissionService, QuestService, CareerService],
 })
 export class GameplayModule {}
+
 
