@@ -19,6 +19,9 @@ import { WardrobeModule } from './wardrobe/wardrobe.module';
 import { BuilderModule } from './builder/builder.module';
 import { AchievementModule } from './achievement/achievement.module';
 
+// Phase 5 — Builder Economy
+import { EconomyModule } from './economy/economy.module';
+
 @Module({
   imports: [
     // Configuration — loads .env (cloud-native, no localhost assumptions)
@@ -46,6 +49,9 @@ import { AchievementModule } from './achievement/achievement.module';
     WardrobeModule,
     BuilderModule,
     AchievementModule,
+
+    // Phase 5 — Builder Economy
+    EconomyModule,
   ],
 })
 export class AppModule {}

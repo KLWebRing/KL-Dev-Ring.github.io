@@ -45,6 +45,11 @@ model User {
   wardrobe        WardrobeItem[]
   achievements    Achievement[]
   builderProgress BuilderProgress?
+
+  // Phase 5 relations
+  walletTransactions WalletTransaction[]
+  purchases          PurchaseHistory[]
+  dailyRewards       DailyReward[]
 }
 
 model Session {
@@ -275,16 +280,27 @@ enum WardrobeSlot {
 // ── Builder Progress ─────────────────────────────────────────────────
 
 model BuilderProgress {
-  id                  String @id @default(cuid())
-  userId              String @unique
-  user                User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  builderPoints       Int    @default(0)
-  level               Int    @default(1)
-  totalXp             Int    @default(0)
-  pointsFromGithub    Int    @default(0)
-  pointsFromSocial    Int    @default(0)
-  pointsFromExploring Int    @default(0)
-  pointsFromBuilding  Int    @default(0)
+  id                  String   @id @default(cuid())
+  userId              String   @unique
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  builderPoints       Int      @default(0)
+  level               Int      @default(1)
+  totalXp             Int      @default(0)
+  pointsFromGithub    Int      @default(0)
+  pointsFromSocial    Int      @default(0)
+  pointsFromExploring Int      @default(0)
+  pointsFromBuilding  Int      @default(0)
+
+  // Phase 5 — Wallet Currencies
+  builderCash         Int      @default(100)   // Starting bonus
+  reputation          Int      @default(0)
+  innovationScore     Int      @default(0)
+  seasonTokens        Int      @default(0)
+  studioValue         Int      @default(0)
+  leaderboardRating   Int      @default(1000)  // ELO-style
+  prestigeLevel       Int      @default(0)
+  dailyLoginStreak    Int      @default(0)
+  lastLoginDate       DateTime?
 }
 
 // ── Achievements ─────────────────────────────────────────────────────
@@ -328,4 +344,109 @@ model ProjectDisplay {
 
   @@unique([studioId, slotIndex])
   @@index([studioId])
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// Phase 5 — Builder Economy
+// ═══════════════════════════════════════════════════════════════════════
+
+// ── Wallet Transactions (Audit Log) ──────────────────────────────────
+
+model WalletTransaction {
+  id            String          @id @default(cuid())
+  userId        String
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type          TransactionType
+  currency      CurrencyType
+  amount        Int
+  source        String          // e.g. "daily_reward", "purchase", "github_commit"
+  description   String          @default("")
+  balanceBefore Int
+  balanceAfter  Int
+  createdAt     DateTime        @default(now())
+
+  @@index([userId, createdAt])
+  @@index([userId, currency])
+}
+
+enum TransactionType {
+  EARN
+  SPEND
+  BONUS
+  REFUND
+}
+
+enum CurrencyType {
+  BUILDER_CASH
+  XP
+  REPUTATION
+  INNOVATION
+  SEASON_TOKEN
+}
+
+// ── Marketplace Items ────────────────────────────────────────────────
+
+model MarketplaceItem {
+  id           String       @id @default(cuid())
+  catalogId    String       @unique   // references client catalog
+  name         String
+  description  String       @default("")
+  category     ItemCategory
+  rarity       ItemRarity   @default(COMMON)
+  price        Int
+  currency     CurrencyType @default(BUILDER_CASH)
+  isLimited    Boolean      @default(false)
+  limitedUntil DateTime?
+  stock        Int?         // null = unlimited
+  tags         String[]     @default([])
+  featured     Boolean      @default(false)
+  requiredTier Int          @default(1)   // minimum studio tier
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  purchases    PurchaseHistory[]
+
+  @@index([category])
+  @@index([rarity])
+  @@index([featured])
+}
+
+enum ItemRarity {
+  COMMON
+  UNCOMMON
+  RARE
+  EPIC
+  LEGENDARY
+  FOUNDER
+  SEASONAL
+  DEVELOPER_EXCLUSIVE
+}
+
+// ── Purchase History ─────────────────────────────────────────────────
+
+model PurchaseHistory {
+  id                String          @id @default(cuid())
+  userId            String
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  marketplaceItemId String
+  marketplaceItem   MarketplaceItem @relation(fields: [marketplaceItemId], references: [id])
+  price             Int
+  currency          CurrencyType
+  purchasedAt       DateTime        @default(now())
+
+  @@index([userId, purchasedAt])
+  @@index([marketplaceItemId])
+}
+
+// ── Daily Rewards ────────────────────────────────────────────────────
+
+model DailyReward {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  day       Int      // streak day (1, 2, 3, ...7, then repeats)
+  reward    String   // JSON: { currency, amount } or { catalogId }
+  claimedAt DateTime @default(now())
+
+  @@index([userId, claimedAt])
 }
