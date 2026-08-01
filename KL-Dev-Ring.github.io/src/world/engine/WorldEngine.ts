@@ -14,6 +14,7 @@ import {
 } from './WorldConfig';
 import { ChunkManager } from '@/world/streaming/ChunkManager';
 import { DayNightEngine } from '@/world/time/DayNightEngine';
+import { WeatherEngine } from '@/world/weather/WeatherEngine';
 import { Scene } from 'three';
 
 // ── Subsystem Interfaces ────────────────────────────────────────────
@@ -33,6 +34,7 @@ export class WorldEngine {
   private readonly subsystems: WorldSubsystem[] = [];
   private readonly chunkManager: ChunkManager;
   private readonly dayNight: DayNightEngine;
+  private readonly weather: WeatherEngine;
 
   // Player tracking
   private playerX = 0;
@@ -58,6 +60,7 @@ export class WorldEngine {
     // Create chunk manager (registered as subsystem on init)
     this.chunkManager = new ChunkManager();
     this.dayNight = new DayNightEngine();
+    this.weather = new WeatherEngine();
   }
 
   // ── Initialization ──────────────────────────────────────────────
@@ -74,6 +77,7 @@ export class WorldEngine {
     // Register built-in subsystems
     this.registerSubsystem(this.chunkManager);
     this.registerSubsystem(this.dayNight);
+    this.registerSubsystem(this.weather);
 
     console.log('[WorldEngine] Initialized');
   }
@@ -84,6 +88,7 @@ export class WorldEngine {
    */
   initScene(scene: Scene): void {
     this.dayNight.init(scene);
+    this.weather.init(scene);
   }
 
   // ── Frame Update ────────────────────────────────────────────────
