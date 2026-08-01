@@ -116,23 +116,30 @@ export class CareerService {
   }
 
   /**
-   * Log a completed mission/project for career advancement.
+   * Log a completed mission/quest/project for career advancement.
+   * Uses Prisma atomic increment to prevent race conditions.
    */
   async logCareerAction(userId: string, type: 'mission' | 'quest' | 'project') {
-    const career = await this.prisma.builderCareer.upsert({
+    // Ensure career record exists
+    await this.prisma.builderCareer.upsert({
       where: { userId },
       create: { userId },
       update: {},
     });
 
-    const updateData: any = {};
-    if (type === 'mission') updateData.totalMissionsCompleted = career.totalMissionsCompleted + 1;
-    if (type === 'quest') updateData.totalQuestsCompleted = career.totalQuestsCompleted + 1;
-    if (type === 'project') updateData.totalProjectsShipped = career.totalProjectsShipped + 1;
+    // Atomic increment — no read-then-write race condition
+    const fieldMap = {
+      mission: 'totalMissionsCompleted',
+      quest: 'totalQuestsCompleted',
+      project: 'totalProjectsShipped',
+    } as const;
 
     await this.prisma.builderCareer.update({
       where: { userId },
-      data: updateData,
+      data: {
+        [fieldMap[type]]: { increment: 1 },
+        lastMilestoneAt: new Date(),
+      },
     });
 
     // Check if this action triggers a rank up
