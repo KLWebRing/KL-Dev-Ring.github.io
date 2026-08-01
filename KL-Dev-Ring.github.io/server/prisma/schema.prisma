@@ -50,6 +50,16 @@ model User {
   walletTransactions WalletTransaction[]
   purchases          PurchaseHistory[]
   dailyRewards       DailyReward[]
+
+  // Phase 6 relations
+  missionProgress    MissionProgress[]
+  questProgress      QuestProgress[]
+  career             BuilderCareer?
+  careerMilestones   CareerMilestone[]
+  reputationHistory  ReputationHistory[]
+  skillNodes         SkillNode[]
+  timelineEntries    TimelineEntry[]
+  activityLogs       ActivityLog[]
 }
 
 model Session {
@@ -301,6 +311,11 @@ model BuilderProgress {
   prestigeLevel       Int      @default(0)
   dailyLoginStreak    Int      @default(0)
   lastLoginDate       DateTime?
+
+  // Phase 6 — Career & Skills
+  careerTitle         String   @default("Newcomer")
+  builderRank         Int      @default(1)
+  skillPoints         Int      @default(0)
 }
 
 // ── Achievements ─────────────────────────────────────────────────────
@@ -449,4 +464,306 @@ model DailyReward {
   claimedAt DateTime @default(now())
 
   @@index([userId, claimedAt])
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// Phase 6 — Developer Life Engine
+// ═══════════════════════════════════════════════════════════════════════
+
+// ── Missions ─────────────────────────────────────────────────────────
+
+model Mission {
+  id           String          @id @default(cuid())
+  missionId    String          @unique     // catalog reference
+  category     MissionCategory
+  name         String
+  description  String          @default("")
+  requirements String          @default("[]")  // JSON array of conditions
+  rewards      String          @default("[]")  // JSON array of rewards
+  xpReward     Int             @default(0)
+  cashReward   Int             @default(0)
+  repReward    Int             @default(0)
+  maxProgress  Int             @default(1)
+  isActive     Boolean         @default(true)
+  isRepeatable Boolean         @default(false)
+  minLevel     Int             @default(1)
+  startsAt     DateTime?
+  endsAt       DateTime?
+  createdAt    DateTime        @default(now())
+
+  progress     MissionProgress[]
+
+  @@index([category, isActive])
+  @@index([isActive])
+}
+
+enum MissionCategory {
+  DAILY
+  WEEKLY
+  MONTHLY
+  SEASONAL
+  COMMUNITY
+  HACKATHON
+  EXPLORATION
+  LEARNING
+  PROJECT
+  OPEN_SOURCE
+}
+
+model MissionProgress {
+  id          String       @id @default(cuid())
+  userId      String
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  missionId   String
+  mission     Mission      @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  state       MissionState @default(AVAILABLE)
+  progress    Int          @default(0)
+  startedAt   DateTime?
+  completedAt DateTime?
+  rewardedAt  DateTime?
+
+  @@unique([userId, missionId])
+  @@index([userId, state])
+}
+
+enum MissionState {
+  LOCKED
+  AVAILABLE
+  ACTIVE
+  COMPLETED
+  EXPIRED
+  REWARDED
+}
+
+// ── Quests ───────────────────────────────────────────────────────────
+
+model Quest {
+  id           String     @id @default(cuid())
+  questId      String     @unique    // catalog reference
+  type         QuestType
+  name         String
+  description  String     @default("")
+  targetAction String     // e.g. "github_commit", "studio_visit"
+  targetCount  Int        @default(1)
+  xpReward     Int        @default(0)
+  cashReward   Int        @default(0)
+  repReward    Int        @default(0)
+  isActive     Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+
+  progress     QuestProgress[]
+
+  @@index([type, isActive])
+}
+
+enum QuestType {
+  DAILY
+  WEEKLY
+}
+
+model QuestProgress {
+  id           String    @id @default(cuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questId      String
+  quest        Quest     @relation(fields: [questId], references: [id], onDelete: Cascade)
+  currentCount Int       @default(0)
+  completed    Boolean   @default(false)
+  claimed      Boolean   @default(false)
+  expiresAt    DateTime
+  claimedAt    DateTime?
+
+  @@unique([userId, questId, expiresAt])
+  @@index([userId, completed])
+}
+
+// ── Builder Career ───────────────────────────────────────────────────
+
+model BuilderCareer {
+  id                     String   @id @default(cuid())
+  userId                 String   @unique
+  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rankName               String   @default("Beginner")
+  totalMissionsCompleted Int      @default(0)
+  totalQuestsCompleted   Int      @default(0)
+  totalProjectsShipped   Int      @default(0)
+  joinedAt               DateTime @default(now())
+  lastMilestoneAt        DateTime?
+}
+
+model CareerMilestone {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  milestoneId String
+  name        String
+  description String   @default("")
+  achievedAt  DateTime @default(now())
+
+  @@unique([userId, milestoneId])
+  @@index([userId, achievedAt])
+}
+
+// ── Reputation History ───────────────────────────────────────────────
+
+model ReputationHistory {
+  id          String           @id @default(cuid())
+  userId      String
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount      Int
+  source      ReputationSource
+  description String           @default("")
+  givenBy     String?          // nullable userId for peer-given rep
+  createdAt   DateTime         @default(now())
+
+  @@index([userId, createdAt])
+  @@index([source])
+}
+
+enum ReputationSource {
+  HELPING
+  COMMUNITY
+  PROJECT
+  MENTORING
+  EVENT
+  REVIEW
+  MISSION
+  SYSTEM
+}
+
+// ── Skill Tree ───────────────────────────────────────────────────────
+
+model SkillNode {
+  id          String      @id @default(cuid())
+  userId      String
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skillId     String      // e.g. "ai_novice", "fullstack_expert"
+  branch      SkillBranch
+  level       Int         @default(1)   // 1-5 within branch
+  xpInvested  Int         @default(0)
+  unlockedAt  DateTime    @default(now())
+
+  @@unique([userId, skillId])
+  @@index([userId, branch])
+}
+
+enum SkillBranch {
+  AI
+  ML
+  FULLSTACK
+  CLOUD
+  CYBERSECURITY
+  GAMEDEV
+  ROBOTICS
+  OPENSOURCE
+  UIUX
+  DATASCIENCE
+}
+
+// ── Timeline ─────────────────────────────────────────────────────────
+
+model TimelineEntry {
+  id          String       @id @default(cuid())
+  userId      String
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  entryType   TimelineType
+  title       String
+  description String       @default("")
+  metadata    String       @default("{}")  // JSON
+  isPublic    Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+
+  @@index([userId, createdAt])
+  @@index([userId, isPublic])
+}
+
+enum TimelineType {
+  JOINED
+  STUDIO_CREATED
+  PROJECT_PUBLISHED
+  HACKATHON_WON
+  LEVEL_UP
+  STUDIO_UPGRADE
+  FEATURED
+  MISSION_COMPLETED
+  CAREER_MILESTONE
+  ACHIEVEMENT_UNLOCKED
+  SKILL_UNLOCKED
+  RANK_UP
+}
+
+// ── Leaderboard Snapshots ────────────────────────────────────────────
+
+model LeaderboardSnapshot {
+  id           String          @id @default(cuid())
+  board        LeaderboardType
+  userId       String
+  username     String
+  avatarUrl    String          @default("")
+  score        Int
+  rank         Int
+  snapshotDate DateTime        @default(now())
+
+  @@unique([board, userId, snapshotDate])
+  @@index([board, rank])
+  @@index([board, snapshotDate])
+}
+
+enum LeaderboardType {
+  LEVEL
+  INNOVATION
+  REPUTATION
+  STUDIO_VALUE
+  COMMUNITY
+  COLLEGE
+  ORGANIZATION
+  DISTRICT
+  SEASON
+}
+
+// ── Activity Log ─────────────────────────────────────────────────────
+
+model ActivityLog {
+  id        String     @id @default(cuid())
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action    ActionType
+  metadata  String     @default("{}")  // JSON
+  createdAt DateTime   @default(now())
+
+  @@index([userId, createdAt])
+  @@index([action])
+}
+
+enum ActionType {
+  SESSION_START
+  SESSION_END
+  EXPLORE
+  STUDIO_VISIT
+  PROJECT_VIEW
+  PROJECT_SHARE
+  FURNITURE_PLACE
+  EVENT_JOIN
+  MISSION_COMPLETE
+  QUEST_COMPLETE
+  MARKETPLACE_PURCHASE
+  SKILL_INVEST
+}
+
+// ── Game Events (Foundation) ─────────────────────────────────────────
+
+model GameEvent {
+  id          String   @id @default(cuid())
+  eventId     String   @unique
+  name        String
+  description String   @default("")
+  type        String   // "seasonal", "hackathon", "community"
+  isActive    Boolean  @default(false)
+  startsAt    DateTime
+  endsAt      DateTime
+  rewards     String   @default("[]") // JSON
+  metadata    String   @default("{}") // JSON
+  createdAt   DateTime @default(now())
+
+  @@index([isActive, startsAt])
 }
