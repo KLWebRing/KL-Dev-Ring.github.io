@@ -16,6 +16,8 @@ import { ReputationService } from './reputation.service';
 import { ReputationController } from './reputation.controller';
 import { SkillTreeService } from './skill-tree.service';
 import { SkillTreeController } from './skill-tree.controller';
+import { TimelineService } from './timeline.service';
+import { TimelineController } from './timeline.controller';
 
 @Module({
   imports: [PrismaModule, RedisModule, EconomyModule, BuilderModule],
@@ -25,6 +27,7 @@ import { SkillTreeController } from './skill-tree.controller';
     CareerController,
     ReputationController,
     SkillTreeController,
+    TimelineController,
   ],
   providers: [
     MissionService,
@@ -32,6 +35,7 @@ import { SkillTreeController } from './skill-tree.controller';
     CareerService,
     ReputationService,
     SkillTreeService,
+    TimelineService,
   ],
   exports: [
     MissionService,
@@ -39,6 +43,7 @@ import { SkillTreeController } from './skill-tree.controller';
     CareerService,
     ReputationService,
     SkillTreeService,
+    TimelineService,
   ],
 })
 export class GameplayModule {}
