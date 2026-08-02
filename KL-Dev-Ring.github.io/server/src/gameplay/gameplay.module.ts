@@ -20,6 +20,8 @@ import { TimelineService } from './timeline.service';
 import { TimelineController } from './timeline.controller';
 import { LeaderboardService } from './leaderboard.service';
 import { LeaderboardController } from './leaderboard.controller';
+import { ActivityService } from './activity.service';
+import { ActivityController } from './activity.controller';
 
 @Module({
   imports: [PrismaModule, RedisModule, EconomyModule, BuilderModule],
@@ -31,6 +33,7 @@ import { LeaderboardController } from './leaderboard.controller';
     SkillTreeController,
     TimelineController,
     LeaderboardController,
+    ActivityController,
   ],
   providers: [
     MissionService,
@@ -40,6 +43,7 @@ import { LeaderboardController } from './leaderboard.controller';
     SkillTreeService,
     TimelineService,
     LeaderboardService,
+    ActivityService,
   ],
   exports: [
     MissionService,
@@ -49,6 +53,7 @@ import { LeaderboardController } from './leaderboard.controller';
     SkillTreeService,
     TimelineService,
     LeaderboardService,
+    ActivityService,
   ],
 })
 export class GameplayModule {}
