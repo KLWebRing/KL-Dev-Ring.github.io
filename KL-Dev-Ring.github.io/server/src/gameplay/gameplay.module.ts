@@ -18,6 +18,8 @@ import { SkillTreeService } from './skill-tree.service';
 import { SkillTreeController } from './skill-tree.controller';
 import { TimelineService } from './timeline.service';
 import { TimelineController } from './timeline.controller';
+import { LeaderboardService } from './leaderboard.service';
+import { LeaderboardController } from './leaderboard.controller';
 
 @Module({
   imports: [PrismaModule, RedisModule, EconomyModule, BuilderModule],
@@ -28,6 +30,7 @@ import { TimelineController } from './timeline.controller';
     ReputationController,
     SkillTreeController,
     TimelineController,
+    LeaderboardController,
   ],
   providers: [
     MissionService,
@@ -36,6 +39,7 @@ import { TimelineController } from './timeline.controller';
     ReputationService,
     SkillTreeService,
     TimelineService,
+    LeaderboardService,
   ],
   exports: [
     MissionService,
@@ -44,6 +48,7 @@ import { TimelineController } from './timeline.controller';
     ReputationService,
     SkillTreeService,
     TimelineService,
+    LeaderboardService,
   ],
 })
 export class GameplayModule {}
