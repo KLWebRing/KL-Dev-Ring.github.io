@@ -1,5 +1,5 @@
 // ── KL DevVerse — Gameplay Module ────────────────────────────────────
-// Wires all Developer Life Engine subsystems (Missions, Quests, Career, etc.)
+// Wires all Developer Life Engine subsystems.
 
 import { Module } from '@nestjs/common';
 import { PrismaModule } from '../prisma/prisma.module';
@@ -14,11 +14,31 @@ import { CareerService } from './career.service';
 import { CareerController } from './career.controller';
 import { ReputationService } from './reputation.service';
 import { ReputationController } from './reputation.controller';
+import { SkillTreeService } from './skill-tree.service';
+import { SkillTreeController } from './skill-tree.controller';
 
 @Module({
   imports: [PrismaModule, RedisModule, EconomyModule, BuilderModule],
-  controllers: [MissionController, QuestController, CareerController, ReputationController],
-  providers: [MissionService, QuestService, CareerService, ReputationService],
-  exports: [MissionService, QuestService, CareerService, ReputationService],
+  controllers: [
+    MissionController,
+    QuestController,
+    CareerController,
+    ReputationController,
+    SkillTreeController,
+  ],
+  providers: [
+    MissionService,
+    QuestService,
+    CareerService,
+    ReputationService,
+    SkillTreeService,
+  ],
+  exports: [
+    MissionService,
+    QuestService,
+    CareerService,
+    ReputationService,
+    SkillTreeService,
+  ],
 })
 export class GameplayModule {}
