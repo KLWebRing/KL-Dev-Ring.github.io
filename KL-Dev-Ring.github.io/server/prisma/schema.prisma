@@ -60,6 +60,15 @@ model User {
   skillNodes         SkillNode[]
   timelineEntries    TimelineEntry[]
   activityLogs       ActivityLog[]
+
+  // Phase 7 relations
+  studioEvolution    StudioEvolution?
+  builderDna         BuilderDNA?
+  builderTwin        BuilderTwin?
+  artifacts          BuilderArtifact[]
+  discoveries        PlayerDiscovery[]
+  guestBookEntries   GuestBookEntry[]   @relation("GuestBookAuthor")
+  studioBookmarks    StudioBookmark[]
 }
 
 model Session {
@@ -208,6 +217,10 @@ model BuilderStudio {
   decorations StudioDecoration[]
   visitors    StudioVisit[]
   projectWall ProjectDisplay[]
+
+  // Phase 7 relations
+  guestBook   GuestBookEntry[]
+  bookmarks   StudioBookmark[]
 }
 
 model StudioFurniture {
@@ -356,6 +369,9 @@ model ProjectDisplay {
   description String  @default("")
   slotIndex   Int
   pinned      Boolean @default(false)
+
+  // Phase 7 relation
+  portal      ProjectPortal?
 
   @@unique([studioId, slotIndex])
   @@index([studioId])
@@ -766,4 +782,213 @@ model GameEvent {
   createdAt   DateTime @default(now())
 
   @@index([isActive, startsAt])
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// Phase 7 — Builder Ecosystem Engine
+// ═══════════════════════════════════════════════════════════════════════
+
+// ── Studio Evolution ─────────────────────────────────────────────────
+
+model StudioEvolution {
+  id              String         @id @default(cuid())
+  userId          String         @unique
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  evolutionStage  EvolutionStage @default(DESK)
+  autoFurniture   String         @default("[]")  // JSON array of auto-placed items
+  totalTriggers   Int            @default(0)
+  lastEvolved     DateTime?
+  computedAt      DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+enum EvolutionStage {
+  DESK            // First repo — laptop appears
+  WORKSPACE       // 10 projects — dual monitors
+  LAB             // Open source maintainer — community board
+  WING            // 1000 GitHub stars — innovation wing
+  CAMPUS          // AI/ML career — robotics lab
+  HQ              // Founder rank — executive office
+}
+
+// ── Builder DNA ──────────────────────────────────────────────────────
+
+model BuilderDNA {
+  id            String      @id @default(cuid())
+  userId        String      @unique
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  primaryType   DNAType     @default(FULLSTACK)
+  secondaryType DNAType?
+  colorPalette  String      @default("{}")   // JSON: { primary, secondary, accent, glow }
+  equipment     String      @default("[]")   // JSON: auto-placed DNA-specific items
+  ambientPreset String      @default("default")
+  computedAt    DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+enum DNAType {
+  AI_ENGINEER
+  GAME_DEV
+  CLOUD_ENGINEER
+  ROBOTICS
+  CYBERSECURITY
+  FULLSTACK
+  DATASCIENCE
+  DESIGNER
+  OPENSOURCE
+  ML_ENGINEER
+}
+
+// ── Project Portal ───────────────────────────────────────────────────
+
+model ProjectPortal {
+  id                String           @id @default(cuid())
+  projectDisplayId  String           @unique
+  projectDisplay    ProjectDisplay   @relation(fields: [projectDisplayId], references: [id], onDelete: Cascade)
+  techStack         String[]         @default([])
+  livePreviewUrl    String?
+  demoUrl           String?
+  architectureNotes String           @default("")
+  readme            String           @default("")
+  stars             Int              @default(0)
+  forks             Int              @default(0)
+  lastSynced        DateTime?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  versions          ProjectVersion[]
+}
+
+model ProjectVersion {
+  id              String        @id @default(cuid())
+  portalId        String
+  portal          ProjectPortal @relation(fields: [portalId], references: [id], onDelete: Cascade)
+  version         String        // e.g. "v1.0", "v2.0"
+  changelog       String        @default("")
+  snapshotUrl     String?       // Screenshot or archive URL
+  metadata        String        @default("{}")  // JSON
+  createdAt       DateTime      @default(now())
+
+  @@unique([portalId, version])
+  @@index([portalId, createdAt])
+}
+
+// ── AI Builder Twin ──────────────────────────────────────────────────
+
+model BuilderTwin {
+  id              String             @id @default(cuid())
+  userId          String             @unique
+  user            User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isActive        Boolean            @default(true)
+  personality     String             @default("{}")   // JSON: tone, style, interests
+  knowledgeBase   String             @default("{}")   // JSON: aggregated from timeline/projects/career
+  providerConfig  String             @default("{}")   // JSON: { provider, model, apiKey? }
+  greeting        String             @default("Hey! I'm the AI twin. Ask me anything about my builder!")
+  totalInteractions Int              @default(0)
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  conversations   TwinConversation[]
+}
+
+model TwinConversation {
+  id          String      @id @default(cuid())
+  twinId      String
+  twin        BuilderTwin @relation(fields: [twinId], references: [id], onDelete: Cascade)
+  visitorId   String      // userId of the visitor
+  question    String      @db.VarChar(2000)
+  answer      String      @db.VarChar(4000)
+  createdAt   DateTime    @default(now())
+
+  @@index([twinId, createdAt])
+  @@index([visitorId])
+}
+
+// ── Builder Artifacts ────────────────────────────────────────────────
+
+model BuilderArtifact {
+  id          String         @id @default(cuid())
+  userId      String
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  artifactId  String         // catalog reference
+  name        String
+  description String         @default("")
+  rarity      ItemRarity     @default(RARE)
+  displaySlot Int?           // position in studio display case
+  unlockedAt  DateTime       @default(now())
+
+  @@unique([userId, artifactId])
+  @@index([userId])
+}
+
+// ── Discovery ────────────────────────────────────────────────────────
+
+model DiscoveryLocation {
+  id           String            @id @default(cuid())
+  locationId   String            @unique
+  name         String
+  description  String            @default("")
+  type         DiscoveryType
+  posX         Float             @default(0)
+  posZ         Float             @default(0)
+  reward       String            @default("{}")  // JSON: { xp, cash, item? }
+  isHidden     Boolean           @default(false)
+  isActive     Boolean           @default(true)
+  metadata     String            @default("{}")  // JSON
+  createdAt    DateTime          @default(now())
+
+  discoveries  PlayerDiscovery[]
+
+  @@index([type, isActive])
+}
+
+enum DiscoveryType {
+  INNOVATION_LAB
+  DEVELOPER_CAFE
+  SECRET_STUDIO
+  KERALA_LANDMARK
+  OPEN_SOURCE_MONUMENT
+  HIDDEN_GARDEN
+  TECH_MUSEUM
+}
+
+model PlayerDiscovery {
+  id           String            @id @default(cuid())
+  userId       String
+  user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  locationId   String
+  location     DiscoveryLocation @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  discoveredAt DateTime          @default(now())
+
+  @@unique([userId, locationId])
+  @@index([userId])
+}
+
+// ── Guest Book & Bookmarks ───────────────────────────────────────────
+
+model GuestBookEntry {
+  id        String        @id @default(cuid())
+  studioId  String
+  studio    BuilderStudio @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User          @relation("GuestBookAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  message   String        @db.VarChar(500)
+  emoji     String        @default("👋")
+  createdAt DateTime      @default(now())
+
+  @@index([studioId, createdAt])
+  @@index([authorId])
+}
+
+model StudioBookmark {
+  id         String        @id @default(cuid())
+  userId     String
+  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  studioId   String
+  studio     BuilderStudio @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  note       String        @default("")
+  createdAt  DateTime      @default(now())
+
+  @@unique([userId, studioId])
+  @@index([userId])
 }
