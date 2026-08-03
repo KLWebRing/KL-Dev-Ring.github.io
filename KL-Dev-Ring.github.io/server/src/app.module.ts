@@ -25,6 +25,9 @@ import { EconomyModule } from './economy/economy.module';
 // Phase 6 — Developer Life Engine
 import { GameplayModule } from './gameplay/gameplay.module';
 
+// Phase 7 — Builder Ecosystem Engine
+import { EcosystemModule } from './ecosystem/ecosystem.module';
+
 @Module({
   imports: [
     // Configuration — loads .env (cloud-native, no localhost assumptions)
@@ -58,6 +61,9 @@ import { GameplayModule } from './gameplay/gameplay.module';
 
     // Phase 6 — Developer Life Engine
     GameplayModule,
+
+    // Phase 7 — Builder Ecosystem Engine
+    EcosystemModule,
   ],
 })
 export class AppModule {}
