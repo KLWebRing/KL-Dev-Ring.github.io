@@ -10,11 +10,28 @@ import { BuilderDNAService } from './builder-dna.service';
 import { BuilderDNAController } from './builder-dna.controller';
 import { ProjectPortalService } from './project-portal.service';
 import { ProjectPortalController } from './project-portal.controller';
+import { BuilderTwinService } from './builder-twin.service';
+import { BuilderTwinController } from './builder-twin.controller';
 
 @Module({
   imports: [PrismaModule, RedisModule],
-  controllers: [EvolutionController, BuilderDNAController, ProjectPortalController],
-  providers: [EvolutionService, BuilderDNAService, ProjectPortalService],
-  exports: [EvolutionService, BuilderDNAService, ProjectPortalService],
+  controllers: [
+    EvolutionController,
+    BuilderDNAController,
+    ProjectPortalController,
+    BuilderTwinController,
+  ],
+  providers: [
+    EvolutionService,
+    BuilderDNAService,
+    ProjectPortalService,
+    BuilderTwinService,
+  ],
+  exports: [
+    EvolutionService,
+    BuilderDNAService,
+    ProjectPortalService,
+    BuilderTwinService,
+  ],
 })
 export class EcosystemModule {}
